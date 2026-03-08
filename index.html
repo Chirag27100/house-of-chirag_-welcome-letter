@@ -6,6 +6,7 @@
   <title>The House of Chirag — Operations</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -292,6 +293,96 @@
       .wm-preview{padding:20px}
       .letter-page{padding:32px 20px}
     }
+
+    /* ── INVOICE GENERATOR ── */
+    #invoice-generator{flex-direction:row!important}
+    .inv-sb{width:300px;min-height:100vh;flex-shrink:0;background:var(--card);border-right:1px solid var(--rule-strong);padding:32px 26px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .inv-preview{flex:1;background:var(--card-deep);padding:44px 52px;overflow-y:auto}
+    .isb-sec{font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:12px;margin-top:20px}
+    .ifg{margin-bottom:14px}
+    .ifl{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);font-weight:500;margin-bottom:5px}
+    .ifi,.ifs{width:100%;background:var(--bg);border:1px solid var(--rule-strong);padding:8px 11px;font-size:11.5px;color:var(--ink);font-family:"DM Sans",sans-serif;outline:none;transition:border-color 0.2s;box-sizing:border-box}
+    .ifi::placeholder{color:var(--ink-muted)}
+    .ifi:focus,.ifs:focus{border-color:var(--ink);background:var(--white)}
+    .ifs{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239E9589'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+    .i-add-btn{width:100%;padding:8px;border:1px dashed var(--rule-strong);background:none;font-family:"DM Sans",sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:all 0.2s;margin-bottom:14px}
+    .i-add-btn:hover{border-color:var(--ink);color:var(--ink)}
+    .iab{width:100%;padding:11px;border:none;font-family:"DM Sans",sans-serif;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-bottom:7px}
+    .iab-p{background:var(--ink);color:var(--bg)}
+    .iab-p:hover{background:var(--ink-mid)}
+    .iab-s{background:transparent;color:var(--ink-soft);border:1px solid var(--rule-strong)}
+    .iab-s:hover{border-color:var(--ink);color:var(--ink)}
+    .isb-footer{margin-top:auto;padding-top:20px;font-size:9.5px;color:var(--ink-muted);line-height:1.75}
+    .isb-rule{height:1px;background:var(--rule-strong);margin:0 0 22px}
+    .invoice-page{background:var(--white);max-width:780px;margin:0 auto;padding:0;position:relative;box-shadow:0 2px 40px rgba(28,25,22,.10);overflow:hidden}
+    .invoice-page::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--ink)}
+    .ih{padding:44px 56px 32px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--rule)}
+    .ih-logo{width:44px;height:44px;object-fit:contain;opacity:.9;display:block;margin-bottom:10px}
+    .ih-name{font-family:"Cormorant Garamond",serif;font-size:18px;font-weight:600;color:var(--ink);letter-spacing:3.5px;text-transform:uppercase;margin-bottom:3px}
+    .ih-sub{font-size:8.5px;color:var(--ink-muted);letter-spacing:2px;text-transform:uppercase}
+    .ih-right{text-align:right}
+    .ih-badge{display:inline-block;background:var(--ink);color:var(--bg);font-size:8px;font-weight:600;letter-spacing:3px;text-transform:uppercase;padding:5px 12px;margin-bottom:14px}
+    .ih-num{font-family:"Cormorant Garamond",serif;font-size:32px;font-weight:300;color:var(--ink);line-height:1;margin-bottom:6px}
+    .ih-meta{font-size:10.5px;color:var(--ink-soft);margin-bottom:3px}
+    .ih-meta strong{color:var(--ink);font-weight:500}
+    .isb2{padding:10px 56px;background:var(--bg-warm);border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+    .isb2-item{font-size:10px;color:var(--ink-soft)}
+    .isb2-item strong{color:var(--ink);font-weight:600}
+    .isdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2E7D4F;margin-right:6px;vertical-align:middle}
+    .ip{padding:28px 56px;display:grid;grid-template-columns:1fr 1fr;gap:32px;border-bottom:1px solid var(--rule)}
+    .ip-lbl{font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:10px}
+    .ip-name{font-family:"Cormorant Garamond",serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:4px}
+    .ip-det{font-size:11px;color:var(--ink-soft);line-height:1.75}
+    .ip-det strong{color:var(--ink-mid);font-weight:500}
+    .irb{padding:12px 56px;background:var(--card);border-bottom:1px solid var(--rule);display:flex;gap:40px;flex-wrap:wrap}
+    .irb-key{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--ink-muted);margin-bottom:3px}
+    .irb-val{font-size:11px;color:var(--ink);font-weight:500}
+    .its{padding:28px 56px 0}
+    .its-hd{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:14px}
+    .itbl{width:100%;border-collapse:collapse}
+    .itbl thead tr{background:var(--ink)}
+    .itbl thead th{font-size:8.5px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--bg);padding:10px 14px;text-align:left}
+    .itbl thead th.tr{text-align:right}
+    .itbl tbody tr{border-bottom:1px solid var(--rule)}
+    .itbl tbody td{padding:13px 14px;vertical-align:top}
+    .it-d{font-size:12px;color:var(--ink)}
+    .it-s{font-size:10px;color:var(--ink-muted);margin-top:2px}
+    .it-r{font-size:12px;color:var(--ink-mid);text-align:right}
+    .it-a{font-size:12px;color:var(--ink);font-weight:500;text-align:right}
+    .itot{padding:20px 56px 0;display:flex;justify-content:flex-end}
+    .itot-b{width:260px}
+    .itr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--rule);font-size:11.5px;color:var(--ink-soft)}
+    .itr.fin{padding:12px 0;border-top:2px solid var(--ink);border-bottom:none;margin-top:4px}
+    .itr.fin span:first-child{font-family:"Cormorant Garamond",serif;font-size:16px;font-weight:600;color:var(--ink)}
+    .itr.fin span:last-child{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;color:var(--ink)}
+    .idc{margin:24px 56px;background:var(--ink);padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+    .idc-lbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(245,239,230,.45);margin-bottom:4px}
+    .idc-date{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:400;color:var(--bg)}
+    .idc-r{text-align:right}
+    .idc-amt{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:300;color:var(--bg)}
+    .ipay{padding:0 56px 24px;border-bottom:1px solid var(--rule)}
+    .ipay-hd{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:14px}
+    .ipay-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px}
+    .ipay-k{font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px}
+    .ipay-v{font-size:11.5px;color:var(--ink);font-weight:500;line-height:1.6}
+    .itbox{background:var(--bg-warm);border-left:3px solid var(--ink);padding:12px 16px;font-size:11px;color:var(--ink-soft);line-height:1.75}
+    .itbox strong{color:var(--ink);font-weight:600}
+    .ilgl{padding:20px 56px;background:var(--card);border-top:1px solid var(--rule)}
+    .ilgl-hd{font-size:8.5px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:10px}
+    .ilgl-txt{font-size:9.5px;color:var(--ink-muted);line-height:1.8;margin-bottom:8px}
+    .ilgl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .ilgl-c{font-size:9px;color:var(--ink-muted);line-height:1.7;padding-left:10px;border-left:1px solid var(--rule-strong)}
+    .iftr{padding:16px 56px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;background:var(--white)}
+    .iftr span{font-size:9px;color:var(--ink-muted);letter-spacing:1px}
+    .iftr-brand{font-family:"Cormorant Garamond",serif;font-size:13px;font-weight:600;color:var(--ink-muted);letter-spacing:2px;text-transform:uppercase}
+    .i-gstnote{font-size:9.5px;color:var(--ink-muted);padding:8px 56px;font-style:italic}
+    .i-tnote{background:#FEFAE8;border:1px solid #D4C060;padding:9px 14px;font-size:10.5px;color:#5A4A00;line-height:1.65;margin:0 56px 20px}
+    @media print{
+      .inv-sb{display:none!important}
+      .inv-preview{padding:0!important;background:white!important}
+      .invoice-page{box-shadow:none!important}
+      .i-tnote{display:none!important}
+    }
   </style>
 </head>
 <body>
@@ -346,12 +437,12 @@
       <div class="mod-desc">Generate the Master Services Agreement with client details pre-filled. Download as Word for signing or PDF for records.</div>
       <div class="mod-badge badge-live">Ready to Use</div>
     </div>
-    <div class="module-card inactive">
-      <div class="mod-status">Soon</div>
+    <div class="module-card" onclick="showScreen('invoice-generator')">
+      <div class="mod-status">● Live</div>
       <div class="mod-num">03</div>
-      <div class="mod-title">Revenue Reports</div>
-      <div class="mod-desc">Client revenue snapshots, milestone tracking, and enterprise value progression.</div>
-      <div class="mod-badge badge-soon">Coming Soon</div>
+      <div class="mod-title">Invoice Generator</div>
+      <div class="mod-desc">Create professional tax invoices with itemised line items, GST calculation, and payment terms. Download as PDF.</div>
+      <div class="mod-badge badge-live">Ready to Use</div>
     </div>
     <div class="module-card inactive">
       <div class="mod-status">Soon</div>
@@ -720,6 +811,7 @@ function showScreen(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   window.scrollTo(0,0);
+  if(id==="invoice-generator"){ iInit(); }
 }
 function syncField(elId, val, placeholder){
   document.getElementById(elId).textContent = val.trim() || placeholder;
@@ -834,277 +926,35 @@ function downloadWord(){
 }
 
 function printLetter(){
-  const cn = document.getElementById("client-name").textContent;
-  const dd = document.getElementById("display-date").textContent;
-  const safe = cn.replace(/[^a-zA-Z0-9 ]/g,"").trim() || "Client";
-  const btn = document.querySelector('[onclick="printLetter()"]');
-  if(btn){ btn.textContent = "Building PDF..."; btn.disabled = true; }
-
+  var btn = document.querySelector('[onclick="printLetter()"]');
+  if(btn){ btn.textContent = "Opening print..."; btn.disabled = true; }
   try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-    const PW = 210, PH = 297;
-    const ML = 22, MR = 22, MT = 22;
-    const CW = PW - ML - MR; // content width = 166mm
-    let y = MT;
-
-    // ── Colours ──
-    const INK      = [28, 25, 22];
-    const INK_MID  = [58, 54, 48];
-    const INK_SOFT = [107, 100, 89];
-    const INK_MUTED= [158, 149, 137];
-    const BG_CARD  = [237, 229, 216];
-    const BG_WARM  = [254, 252, 249];
-    const BG_DARK  = [28, 25, 22];
-    const WHITE    = [254, 252, 249];
-
-    // ── Helpers ──
-    function setFont(size, style, color){
-      doc.setFontSize(size);
-      doc.setFont('helvetica', style || 'normal');
-      doc.setTextColor(...(color || INK));
-    }
-    function checkPage(needed){
-      if(y + needed > PH - 18){ doc.addPage(); y = MT; }
-    }
-    function hRule(thick, color){
-      doc.setDrawColor(...(color || [200,195,188]));
-      doc.setLineWidth(thick || 0.2);
-      doc.line(ML, y, ML + CW, y);
-      y += 3;
-    }
-    function sectionLabel(text){
-      checkPage(10);
-      y += 5;
-      setFont(7, 'bold', INK_SOFT);
-      doc.setCharSpace(2);
-      doc.text(text.toUpperCase(), ML, y);
-      doc.setCharSpace(0);
-      y += 1.5;
-      doc.setDrawColor(...INK_SOFT);
-      doc.setLineWidth(0.15);
-      doc.line(ML, y, ML + CW, y);
-      y += 4;
-    }
-    function bodyText(text, color){
-      checkPage(8);
-      setFont(9.5, 'normal', color || INK_MID);
-      doc.setLineHeightFactor(1.55);
-      const lines = doc.splitTextToSize(text, CW);
-      lines.forEach(line => {
-        checkPage(6);
-        doc.text(line, ML, y);
-        y += 5.2;
-      });
-      doc.setLineHeightFactor(1.15);
-      y += 1.5;
-    }
-
-    // ══════════════════════════════════════
-    // HEADER
-    // ══════════════════════════════════════
-
-    // Logo image (HOC transparent PNG)
+    var pageHTML = document.querySelector('#welcome-mail .letter-page').innerHTML;
+    var allStyles = '';
     try {
-      const logoUrl = 'https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png';
-      // We'll skip async image load and use text logo fallback for speed
+      Array.from(document.styleSheets).forEach(function(ss){
+        try { Array.from(ss.cssRules).forEach(function(r){ allStyles += r.cssText + '\n'; }); } catch(e){}
+      });
     } catch(e){}
-
-    // Brand name
-    setFont(15, 'bold', INK);
-    doc.setCharSpace(3.5);
-    doc.text('THE HOUSE OF CHIRAG', ML, y);
-    doc.setCharSpace(0);
-    y += 5;
-    setFont(7, 'normal', INK_SOFT);
-    doc.setCharSpace(1.5);
-    doc.text('Revenue Architecture  ·  Operational Leverage  ·  Enterprise Value', ML, y);
-    doc.setCharSpace(0);
-    y += 4;
-
-    // Divider
-    doc.setDrawColor(...INK);
-    doc.setLineWidth(0.4);
-    doc.line(ML, y, ML + CW, y);
-    y += 5;
-
-    // Meta row
-    setFont(8.5, 'normal', INK_MUTED);
-    doc.text(dd, ML, y);
-    doc.text('Private & Confidential', ML + CW, y, { align: 'right' });
-    y += 8;
-
-    // Salutation
-    setFont(16, 'bold', INK);
-    doc.text('Dear ' + cn + ',', ML, y);
-    y += 9;
-
-    // ══════════════════════════════════════
-    // SECTION 1
-    // ══════════════════════════════════════
-    sectionLabel('A Partnership Begins Here');
-    bodyText('Chirag L Gowda and The House of Chirag extend a formal welcome. You are now part of a select group of operators and founders with whom we have chosen to build.');
-    bodyText('We are deliberate about this. We do not take on volume. We take on potential — specifically, businesses where structured intervention produces compounding, measurable returns.');
-    bodyText('If you are reading this, our assessment is clear: your business has the inputs for significant scale. Our mandate is to architect the systems that convert those inputs into durable output.');
-
-    // ══════════════════════════════════════
-    // SECTION 2
-    // ══════════════════════════════════════
-    sectionLabel('What This Engagement Is — And Is Not');
-    bodyText('The world\'s most enduring companies operate on infrastructure, not improvisation. Walmart built logistics systems. Amazon built distribution architecture. Goldman Sachs built client relationship frameworks around long-term outcomes. Apple built ecosystems that compound loyalty and revenue simultaneously.');
-    bodyText('That is the operating philosophy we bring to your business. Not campaigns. Not creativity for its own sake. Structured revenue architecture — built to hold under pressure and scale with precision.');
-
-    // ══════════════════════════════════════
-    // PRINCIPLES
-    // ══════════════════════════════════════
-    sectionLabel('Our Four Operating Principles');
-    const principles = [
-      ['01', 'Client Outcomes First.', 'Every decision evaluated through one lens: does this create measurable revenue or enterprise value for you.'],
-      ['02', 'Precision Over Activity.', 'We do not optimize for effort or volume. The highest-leverage moves receive the majority of our attention.'],
-      ['03', 'Long-Term Architecture.', 'We build systems that compound — not tools that expire. Infrastructure designed to increase in value over time.'],
-      ['04', 'Radical Accountability.', 'Results are visible, documented, and tied to objectives we define together. You always know exactly where we stand.'],
-    ];
-    principles.forEach(([num, title, desc]) => {
-      checkPage(14);
-      // Row background
-      const rowH = 12;
-      doc.setFillColor(...BG_CARD);
-      doc.rect(ML, y - 4, CW, rowH, 'F');
-      // Num
-      setFont(8, 'bold', INK_MUTED);
-      doc.text(num, ML + 2, y + 3);
-      // Title
-      setFont(9, 'bold', INK);
-      doc.text(title, ML + 10, y + 3);
-      // Desc
-      setFont(8.5, 'normal', INK_SOFT);
-      const dlines = doc.splitTextToSize(desc, CW - 12);
-      dlines.forEach((dl, i) => doc.text(dl, ML + 10, y + 3 + (i+1)*4.5));
-      y += rowH + 2 + (dlines.length > 1 ? (dlines.length-1)*4.5 : 0);
-    });
-    y += 2;
-
-    // ══════════════════════════════════════
-    // ONBOARDING STEPS
-    // ══════════════════════════════════════
-    sectionLabel('Your Onboarding Sequence');
-    bodyText('Execution at this level begins with complete clarity. The first phase is structured to extract the precise intelligence needed to build your revenue architecture accurately.');
-
-    const steps = [
-      ['01', 'Complete the Onboarding Document', 'Your answers directly determine the quality of what we build. Surface answers produce surface results.'],
-      ['02', 'Provide Access and Assets', 'Creative assets, analytics, platform access, existing data. We work from evidence, not assumptions.'],
-      ['03', 'Strategic Mapping Session', 'Upon onboarding completion, we begin building the full revenue architecture.'],
-    ];
-    steps.forEach(([num, title, desc]) => {
-      checkPage(16);
-      const rowH = 14;
-      // Dark number box
-      doc.setFillColor(...BG_DARK);
-      doc.rect(ML, y - 4, 10, rowH, 'F');
-      setFont(8, 'bold', [245, 239, 230]);
-      doc.text(num, ML + 5, y + 3.5, { align: 'center' });
-      // Content box
-      doc.setFillColor(...BG_WARM);
-      doc.setDrawColor(...[200, 195, 188]);
-      doc.setLineWidth(0.2);
-      doc.rect(ML + 10, y - 4, CW - 10, rowH, 'FD');
-      setFont(9, 'bold', INK);
-      doc.text(title, ML + 14, y + 2);
-      setFont(8.5, 'normal', INK_SOFT);
-      const dlines = doc.splitTextToSize(desc, CW - 16);
-      dlines.forEach((dl, i) => doc.text(dl, ML + 14, y + 2 + (i+1)*4.5));
-      y += rowH + 2 + (dlines.length > 1 ? (dlines.length-1)*4.5 : 0);
-    });
-
-    // Onboarding link box
-    checkPage(14);
-    y += 2;
-    doc.setFillColor(...BG_CARD);
-    doc.setDrawColor(...INK);
-    doc.setLineWidth(0.5);
-    doc.line(ML, y - 1, ML, y + 10); // left accent line
-    doc.setFillColor(...BG_CARD);
-    doc.rect(ML + 1, y - 3, CW - 1, 13, 'F');
-    setFont(9, 'bold', INK);
-    doc.text('Complete onboarding within 24 hours:', ML + 4, y + 3);
-    setFont(9, 'normal', INK_SOFT);
-    doc.text('hoconboarding.netlify.app', ML + 4, y + 8);
-    y += 16;
-
-    // ══════════════════════════════════════
-    // CONTACT BLOCK
-    // ══════════════════════════════════════
-    sectionLabel('Operations and Communication');
-    bodyText('Structure is the foundation of everything we do. Clear accountability channels eliminate delay and protect execution quality.');
-
-    checkPage(30);
-    const cbH = 28;
-    doc.setFillColor(...BG_DARK);
-    doc.rect(ML, y, CW, cbH, 'F');
-    // Left accent
-    doc.setFillColor(107, 100, 89);
-    doc.rect(ML, y, 2.5, cbH, 'F');
-
-    setFont(7, 'bold', [245, 239, 230]);
-    doc.setCharSpace(2);
-    doc.text('YOUR PRIMARY CONTACT', ML + 6, y + 6);
-    doc.setCharSpace(0);
-    setFont(14, 'bold', [245, 239, 230]);
-    doc.text('Dhanush Devanga', ML + 6, y + 13);
-    setFont(9, 'normal', [200, 190, 175]);
-    doc.text('+91 87920 35854  —  Head of Operations', ML + 6, y + 19);
-    setFont(8, 'normal', [140, 132, 120]);
-    const cnote = doc.splitTextToSize('Dhanush coordinates all execution, timelines, documentation, and compliance. He will be in contact shortly to confirm next steps.', CW - 10);
-    cnote.forEach((l, i) => doc.text(l, ML + 6, y + 23.5 + i * 4));
-    y += cbH + 6;
-
-    // ══════════════════════════════════════
-    // CLOSING
-    // ══════════════════════════════════════
-    sectionLabel('What We Are Building Toward');
-    bodyText('The most valuable businesses share a common architecture: predictable revenue, operational leverage, and compounding enterprise value. These are not aspirational outcomes. They are engineered outputs of deliberate systems.');
-    bodyText('That is what we are here to build with you.');
-
-    // Closing quote
-    checkPage(18);
-    doc.setFillColor(248, 244, 238);
-    doc.rect(ML, y, CW, 14, 'F');
-    doc.setFillColor(...INK);
-    doc.rect(ML, y, 2, 14, 'F');
-    setFont(13, 'italic', INK);
-    doc.text('"Build revenue. Build control. Build long-term assets."', ML + 6, y + 8.5);
-    y += 18;
-
-    // Signature
-    checkPage(22);
-    setFont(14, 'bold', INK);
-    doc.text('Chirag L Gowda', ML, y);
-    y += 5;
-    setFont(8.5, 'normal', INK_SOFT);
-    doc.text('Founder', ML, y);
-    y += 4.5;
-    setFont(8.5, 'normal', INK_MUTED);
-    doc.text('The House of Chirag', ML, y);
-    y += 10;
-
-    // Footer note
-    checkPage(10);
-    doc.setDrawColor(200, 195, 188);
-    doc.setLineWidth(0.2);
-    doc.line(ML, y, ML + CW, y);
-    y += 4;
-    setFont(7.5, 'italic', INK_MUTED);
-    doc.text('This document is confidential and intended solely for the named recipient.', ML + CW/2, y, { align: 'center' });
-
-    // ── Save ──
-    doc.save('HOC_Welcome_' + safe.replace(/ /g,'_') + '.pdf');
+    var win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">'
+      + '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>'
+      + '<style>'
+      + allStyles
+      + '@page{margin:14mm 16mm;size:A4}'
+      + '@media print{body{margin:0;padding:0;background:white}.team-note{display:none!important}'
+      + '.letter-page{box-shadow:none!important;max-width:100%!important;margin:0!important;padding:0!important;border:none!important}}'
+      + 'body{margin:0;padding:0;background:white;font-family:"DM Sans",sans-serif}'
+      + '.letter-page{background:white;padding:0;position:relative}'
+      + '</style></head><body>'
+      + '<div class="letter-page">' + pageHTML + '</div>'
+      + '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close()};};<\/script>'
+      + '</body></html>');
+    win.document.close();
   } catch(err) {
-    console.error('PDF error:', err);
-    alert('PDF generation failed: ' + err.message);
+    alert('Print failed: ' + err.message);
   }
-
-  if(btn){ btn.textContent = "⬇ Download as PDF"; btn.disabled = false; }
+  if(btn){ btn.textContent = "\u2b07 Download as PDF"; btn.disabled = false; }
 }
 
 // ══════════════════════════════════════════════
@@ -1376,339 +1226,340 @@ function msaDownloadWord(){
 }
 
 function msaDownloadPDF(){
-  const { client, dateStr, city, rep } = msaGetValues();
-  const safe = client.replace(/[^a-zA-Z0-9 ]/g,'').trim() || 'Client';
-  const btn = document.querySelector('[onclick="msaDownloadPDF()"]');
-  if(btn){ btn.textContent = 'Building PDF...'; btn.disabled = true; }
-
-  // Fetch logo as base64 first, then build PDF
-  const logoUrl = 'https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png';
-
-  function buildMsaPdf(logoB64){
+  var btn = document.querySelector('[onclick="msaDownloadPDF()"]');
+  if(btn){ btn.textContent = "Opening print..."; btn.disabled = true; }
+  try {
+    var pageHTML = document.querySelector('#msa-page').outerHTML;
+    var allStyles = '';
     try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-      const PW = 210, PH = 297;
-      const ML = 20, MR = 20, MT = 20;
-      const CW = PW - ML - MR;
-      let y = MT;
-      let pageCount = 1;
-
-      const INK       = [28, 25, 22];
-      const INK_MID   = [58, 54, 48];
-      const INK_SOFT  = [107, 100, 89];
-      const INK_MUTED = [158, 149, 137];
-      const BG_WARM   = [254, 252, 249];
-      const BG_DARK   = [28, 25, 22];
-
-      // Draw watermark centred on current page
-      function drawWatermark(){
-        if(!logoB64) return;
-        const wmSize = 100; // 100mm square, centred on A4
-        const wx = (PW - wmSize) / 2;
-        const wy = (PH - wmSize) / 2;
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({ opacity: 0.07 }));
-        doc.addImage(logoB64, 'PNG', wx, wy, wmSize, wmSize);
-        doc.restoreGraphicsState();
-      }
-
-      // Draw watermark on page 1
-      drawWatermark();
-
-      function sf(size, style, color){
-        doc.setFontSize(size);
-        doc.setFont('helvetica', style || 'normal');
-        doc.setTextColor(...(color || INK));
-      }
-      function cp(needed){
-        if(y + needed > PH - 16){
-          doc.addPage();
-          pageCount++;
-          drawWatermark(); // watermark on every new page
-          y = MT;
-        }
-      }
-      function para(text, bold, color){
-        cp(6);
-        sf(9, bold ? 'bold' : 'normal', color || INK_MID);
-        doc.setLineHeightFactor(1.5);
-        const lines = doc.splitTextToSize(text, CW);
-        lines.forEach(l => { cp(5); doc.text(l, ML, y); y += 4.6; });
-        doc.setLineHeightFactor(1.15);
-        y += 1.5;
-      }
-      function bullet(items){
-        items.forEach(item => {
-          cp(5);
-          sf(9, 'normal', INK_MID);
-          doc.setLineHeightFactor(1.5);
-          const lines = doc.splitTextToSize(item, CW - 8);
-          doc.text('\u2022', ML + 1, y);
-          lines.forEach((l, i) => { cp(5); doc.text(l, ML + 5, y); y += 4.6; });
-          doc.setLineHeightFactor(1.15);
-          y += 0.5;
-        });
-        y += 1;
-      }
-      function clauseHead(text){
-        cp(12);
-        y += 4;
-        sf(7.5, 'bold', INK);
-        doc.setCharSpace(0.8);
-        doc.text(text, ML, y);
-        doc.setCharSpace(0);
-        y += 1.2;
-        doc.setDrawColor(...INK_SOFT);
-        doc.setLineWidth(0.15);
-        doc.line(ML, y, ML + CW, y);
-        y += 4;
-      }
-      function sectionDiv(text){
-        cp(14);
-        y += 6;
-        doc.setFillColor(28, 25, 22);
-        doc.rect(ML, y - 3, CW, 9, 'F');
-        sf(8, 'bold', [245, 239, 230]);
-        doc.setCharSpace(2);
-        doc.text(text, PW/2, y + 3, { align: 'center' });
-        doc.setCharSpace(0);
-        y += 10;
-      }
-
-      // ── Header ──
-      // Logo centred at top of first page
-      if(logoB64){
-        const logoSize = 18;
-        doc.addImage(logoB64, 'PNG', (PW - logoSize)/2, y, logoSize, logoSize);
-        y += logoSize + 3;
-      }
-      sf(13, 'bold', INK);
-      doc.setCharSpace(3);
-      doc.text('THE HOUSE OF CHIRAG', PW/2, y, { align: 'center' });
-      doc.setCharSpace(0);
-      y += 5;
-      sf(11, 'bold', INK);
-      doc.setCharSpace(1.5);
-      doc.text('MASTER SERVICES AGREEMENT', PW/2, y, { align: 'center' });
-      doc.setCharSpace(0);
-      y += 5;
-      sf(7, 'normal', INK_SOFT);
-      doc.setCharSpace(1.5);
-      doc.text('Revenue Systems  \u2022  Growth Architecture  \u2022  Marketing Infrastructure', PW/2, y, { align: 'center' });
-      doc.setCharSpace(0);
-      y += 4;
-      doc.setDrawColor(...INK);
-      doc.setLineWidth(0.4);
-      doc.line(ML, y, ML+CW, y);
-      y += 7;
-
-      // Preamble
-      para('This Master Services Agreement (the "Agreement") is entered into as of the date last signed below (the "Effective Date") by and between:');
-      para('The House of Chirag ("Company") \u2014 a professional services firm providing revenue systems architecture, strategic advisory, marketing infrastructure development, automation deployment, and associated execution services, and');
-      para(client + ' ("Client") \u2014 including its principals, officers, directors, owners, successors, assigns, and affiliated entities.');
-      para('By executing this Agreement, Client confirms that it has read, understood, and voluntarily accepted all terms herein as a condition of engagement.');
-
-      sectionDiv('OPERATIVE TERMS');
-
-      clauseHead('1.  ENGAGEMENT AND LEGAL RELATIONSHIP');
-      para('The Company provides strategic advisory, revenue systems architecture, marketing infrastructure development, automation deployment, and associated execution services.');
-      para('The Company operates strictly as an independent contractor. Nothing in this Agreement shall be interpreted to create a partnership, joint venture, agency relationship, fiduciary duty, employment relationship, profit-sharing arrangement, or any form of co-ownership between the parties.');
-      para('No agents, employees, or sub-contractors of the Company shall be deemed employees of the Client, and the Company assumes full responsibility for its team\u2019s tax obligations, benefits, and statutory entitlements.');
-      para('All strategic decisions, financial outcomes, operational execution, compliance obligations, and business performance remain solely the responsibility of the Client.');
-
-      clauseHead('2.  FINANCIAL TERMS AND ENFORCEMENT');
-      para('No services shall commence without receipt of cleared funds in accordance with the agreed payment structure set out in the applicable Scope of Services document.');
-      para('All fees paid to the Company are final, non-refundable, non-cancellable, non-transferable, and non-reversible under any circumstances.');
-      para('The Client expressly and irrevocably waives any right to initiate or pursue chargebacks, payment disputes, card reversals, bank recalls, escrow claims, platform disputes, or similar financial reversals through any channel, including but not limited to Stripe, PayPal, Razorpay, or any issuing bank.');
-      para('Any attempt to dispute or reverse payment shall constitute a material breach of this Agreement and shall entitle the Company, without limitation, to:');
-      bullet(['Immediate suspension or termination of all services','Revocation of all system and infrastructure access','Legal recovery of the full outstanding and disputed amounts','Recovery of all legal fees, collection costs, and enforcement expenses','Liquidated damages equal to three (3) times the total contract value \u2014 the parties agree this is a genuine pre-estimate of loss, not a penalty']);
-      para('Any overdue balance shall accrue interest at five percent (5%) per month, compounded monthly, from the due date until paid in full. Suspension of services due to non-payment does not constitute breach or give rise to any liability for the Company.');
-      para('Late payment fees and interest charges shall not be waivable except by written instrument signed by an authorized representative of the Company.');
-
-      clauseHead('3.  NO WARRANTY; DISCLAIMER OF RESULTS');
-      para('The Client acknowledges that the Company makes no representations, warranties, or guarantees \u2014 express, implied, or statutory \u2014 regarding revenue, profitability, return on investment, lead volume, conversion rate, growth rate, ranking, traffic, or any other measure of business performance.');
-      para('Marketing, advertising, and revenue performance are inherently subject to variables outside the Company\u2019s control, including but not limited to: market conditions, competitive dynamics, offer viability, pricing, budget levels, sales execution, fulfillment capacity, platform policy changes, algorithm updates, and regulatory shifts.');
-      para('Any forecasts, illustrations, projections, or case studies shared by the Company are for informational context only. They do not constitute guarantees, binding targets, or representations of likely outcomes.');
-      para('THE COMPANY EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THE CLIENT ASSUMES FULL COMMERCIAL RISK.', true);
-
-      clauseHead('4.  CLIENT RESPONSIBILITIES AND RISK ALLOCATION');
-      para('The Client retains sole and exclusive responsibility for:');
-      bullet(['Sales conversion, closing, and revenue generation','Product and service development, quality, and fulfilment','Customer satisfaction, complaints, and dispute resolution','Refund policies and processing','Regulatory, licensing, and statutory compliance in all relevant jurisdictions','Tax obligations, GST, income declarations, and financial reporting','Advertising standards compliance and platform policy adherence','Intellectual property ownership of the Client\u2019s products, services, and brand','Data protection obligations relating to the Client\u2019s customer base']);
-      para('The Company shall not be liable for business losses, platform suspensions, regulatory penalties, customer disputes, reputational damage, or operational deficiencies arising from the Client\u2019s business conduct.');
-      para('Risk allocation under this Agreement is intentional and reflects the pricing structure. The Client has had the opportunity to seek independent legal advice prior to execution.');
-
-      clauseHead('5.  CONFIDENTIALITY');
-      para('Each party agrees to hold the other\u2019s Confidential Information in strict confidence and not to disclose it to any third party without prior written consent, except as required by law.');
-      para('\u201cConfidential Information\u201d means all non-public information disclosed by one party to the other in connection with this Agreement, whether in written, oral, digital, or visual form, including but not limited to: business strategies, financial data, client lists, system architecture, methodologies, pricing, and operational processes.');
-      para('Confidentiality obligations shall survive termination of this Agreement for a period of five (5) years. Obligations with respect to trade secrets shall survive indefinitely.');
-      para('Exceptions: Confidentiality obligations do not apply to information that (a) is or becomes publicly known through no breach of this Agreement; (b) was rightfully known by the receiving party before disclosure; (c) is independently developed without use of the Confidential Information; or (d) is required to be disclosed by law or court order, provided the disclosing party is notified promptly to seek a protective order.');
-      para('Upon termination, each party shall promptly return or certify destruction of the other party\u2019s Confidential Information upon written request.');
-
-      clauseHead('6.  INTELLECTUAL PROPERTY AND SYSTEMS OWNERSHIP');
-      para('All proprietary frameworks, methodologies, systems, strategies, documents, automation structures, advertising architecture, tracking configurations, scripts, templates, creative assets, and internal processes developed or utilized by the Company remain the exclusive intellectual property of The House of Chirag, including all underlying trade secrets, copyrights, and know-how.');
-      para('Pre-Existing IP: Each party retains all rights to intellectual property it owned prior to the Effective Date. The Company\u2019s licence to use the Client\u2019s pre-existing materials is limited solely to the performance of services under this Agreement.');
-      para('The Client is granted a limited, revocable, non-exclusive, non-transferable, non-sublicensable licence to use deliverables strictly for internal business purposes, contingent on full financial compliance with this Agreement.');
-      para('The Company may retain administrative or structural control over advertising accounts, automation platforms, tracking systems, and related infrastructure during the engagement period.');
-      para('In the event of non-payment, breach, dispute initiation, or misuse of Company intellectual property, the Company reserves the right to revoke access immediately and without prior notice.');
-      para('Any attempt to reproduce, reverse-engineer, distribute, resell, teach, or commercially exploit the Company\u2019s intellectual property \u2014 by the Client, its employees, affiliates, or agents \u2014 shall constitute willful infringement and be subject to injunctive relief, damages, and full legal enforcement.');
-
-      clauseHead('7.  DATA PROTECTION AND SECURITY');
-      para('Each party shall comply with all applicable data protection laws in relation to personal data processed in connection with this Agreement, including the Information Technology Act, 2000 (India) and its applicable amendments, as well as any international data protection laws relevant to the Client\u2019s customer base.');
-      para('The Company shall implement reasonable organisational and technical measures to safeguard any Client data shared with the Company in performance of services, including access controls, encryption at rest and in transit, and security monitoring.');
-      para('In the event of a security incident involving Client data, the Company shall notify the Client within 72 hours of becoming aware of such incident and cooperate in remediation efforts.');
-      para('The Client represents that it has obtained all necessary consents and authorisations for any personal data it provides to the Company in connection with this Agreement.');
-      para('Upon termination of this Agreement, the Company shall delete or return Client-provided personal data within 30 days of written request, subject to any legal retention obligations.');
-
-      clauseHead('8.  FORCE MAJEURE');
-      para('Neither party shall be liable for failure to perform its obligations under this Agreement to the extent such failure is caused by events beyond its reasonable control, including but not limited to: acts of God, natural disasters, pandemics, epidemic outbreaks, wars, government actions, civil unrest, cyberattacks, critical internet or platform infrastructure failures, power outages, or regulatory shutdowns ("Force Majeure Event").');
-      para('The affected party must: (a) provide written notice to the other party within 7 business days of the onset of the Force Majeure Event; (b) use commercially reasonable efforts to mitigate the impact; and (c) resume performance promptly when the event concludes.');
-      para('If a Force Majeure Event continues for more than 60 consecutive days, either party may terminate this Agreement upon 14 days written notice without penalty. Any fees already paid to the Company for services rendered prior to the Force Majeure Event are non-refundable.');
-
-      sectionDiv('LIABILITY, DISPUTE & GOVERNANCE');
-
-      clauseHead('9.  DELIVERABLES AND SCOPE OF WORK');
-      para('The specific services, scope of work, phases, milestones, timelines, and deliverables to be provided by the Company shall be set forth in a separate Scope of Services & Deliverables document ("Deliverables Document"), attached hereto and incorporated by reference.');
-      para('Only those services expressly described in the Deliverables Document constitute binding obligations of the Company. No verbal statements, proposals, informal communications, sales discussions, or marketing materials shall expand or modify scope unless documented in writing and countersigned by an authorized representative of the Company.');
-      para('Change Requests: Any request by the Client to modify the scope of work shall be submitted in writing. The Company shall assess and respond within 7 business days with revised terms and fees. No change to scope takes effect until documented in a signed amendment.');
-      para('In the event of interpretive ambiguity as to scope, determination shall rest exclusively with the Company. Failure by the Client to review the Deliverables Document shall not impair its enforceability.');
-
-      clauseHead('10.  LIMITATION OF LIABILITY');
-      para('To the maximum extent permitted by applicable law, the Company\u2019s total aggregate liability for all claims arising out of or relating to this Agreement shall not exceed the lesser of (a) the total fees paid by the Client during the thirty (30) days preceding the event giving rise to the claim, or (b) INR 50,000 (fifty thousand Indian rupees).');
-      para('UNDER NO CIRCUMSTANCES SHALL THE COMPANY BE LIABLE FOR INDIRECT, INCIDENTAL, CONSEQUENTIAL, PUNITIVE, SPECIAL, OR EXEMPLARY DAMAGES \u2014 INCLUDING LOST PROFITS, LOST REVENUE, BUSINESS INTERRUPTION, REPUTATIONAL DAMAGE, DATA LOSS, OR OPPORTUNITY COSTS \u2014 EVEN IF ADVISED OF THEIR POSSIBILITY.', true);
-      para('The Client acknowledges that this limitation reflects the agreed allocation of risk and is fundamental to the commercial basis of the engagement.');
-      para('Severability of Limitation: If any part of this limitation is held unenforceable, the remainder of the limitation clause shall continue in full force.');
-
-      clauseHead('11.  INDEMNIFICATION');
-      para('The Client agrees to indemnify, defend, and hold harmless The House of Chirag and its owners, officers, employees, contractors, and affiliates from and against all claims, liabilities, damages, losses, penalties, fines, settlements, judgments, and legal expenses (including reasonable attorney\u2019s fees) arising from or relating to:');
-      bullet(['The Client\u2019s business operations, products, or services','Customer complaints, disputes, or regulatory investigations','Fulfilment failures, product defects, or service delivery issues','Advertising, platform policy, or regulatory compliance breaches','Intellectual property disputes relating to the Client\u2019s offerings','Tax, financial misconduct, or statutory violations','Any payment disputes or chargeback attempts initiated by the Client','Any misuse of the Company\u2019s proprietary systems or deliverables']);
-      para('This indemnification obligation shall survive termination of this Agreement indefinitely.');
-
-      clauseHead('12.  NON-DISPARAGEMENT');
-      para('The Client agrees not to make, publish, communicate, or distribute \u2014 in any form, whether written, verbal, digital, on social media, in reviews, or through third parties \u2014 any statement that could reasonably be interpreted as negative, defamatory, misleading, or harmful to the reputation, brand, or commercial standing of The House of Chirag.');
-      para('The Client expressly acknowledges that truth shall not constitute a defense to breach of this provision.');
-      para('Violation of this clause shall entitle the Company to liquidated damages equal to three (3) times the total contract value, plus injunctive relief and full recovery of legal costs.');
-
-      clauseHead('13.  NON-SOLICITATION');
-      para('During the term of this Agreement and for a period of twenty-four (24) months following termination, the Client shall not, directly or indirectly:');
-      bullet(['Solicit, recruit, or engage any employee, contractor, or sub-contractor of the Company','Attempt to circumvent the Company by directly engaging any vendor, supplier, or platform partner introduced by the Company in the course of services']);
-      para('Breach of this clause shall entitle the Company to liquidated damages equal to the greater of (a) six (6) months of the contracted fee, or (b) three (3) times the value of any engagement established in breach.');
-
-      clauseHead('14.  DISPUTE RESOLUTION');
-      para('The parties shall first attempt to resolve any dispute through good faith negotiation within 15 days of written notice of the dispute.');
-      para('If unresolved, any dispute arising from or relating to this Agreement shall be submitted to binding arbitration, administered in ' + city + ', India, under the Arbitration and Conciliation Act, 1996 (as amended). The arbitration shall be conducted by a sole arbitrator mutually agreed upon by the parties, or appointed in accordance with the Act.');
-      para('The Client expressly waives any right to trial by jury and agrees not to participate in any class action, representative action, or collective proceeding against the Company.');
-      para('If the Company prevails in any dispute, the Client shall be responsible for all legal fees, arbitration costs, and enforcement expenses. The Company\u2019s right to seek injunctive relief in any court of competent jurisdiction is preserved.');
-
-      clauseHead('15.  TERMINATION');
-      para('The Company may terminate this Agreement at its sole discretion with or without cause, upon 7 days written notice to the Client.');
-      para('The Client may request termination in writing. Termination by the Client does not entitle the Client to any refund of fees paid.');
-      para('Upon termination: (a) all outstanding amounts become immediately due and payable; (b) the Client\u2019s licence to use deliverables terminates immediately upon any payment default; and (c) each party shall return or destroy the other\u2019s Confidential Information within 30 days.');
-      para('The following provisions survive termination indefinitely: payment obligations, intellectual property rights, confidentiality, limitation of liability, indemnification, non-disparagement, non-solicitation, and dispute resolution.');
-
-      clauseHead('16.  REPRESENTATIONS AND WARRANTIES');
-      para('Each party represents and warrants to the other that:');
-      bullet(['It has full legal authority and capacity to enter into this Agreement','This Agreement has been duly authorized by all necessary actions','Execution and performance do not violate any applicable law, regulation, or third-party agreement','It is not a party to any litigation, arbitration, or regulatory action that would materially affect its ability to perform under this Agreement']);
-      para('The Client additionally represents and warrants that:');
-      bullet(['It owns or has the rights to all materials, data, and intellectual property it provides to the Company','Its business operations are conducted in compliance with all applicable laws','It has obtained all necessary licences and regulatory approvals to conduct its business']);
-
-      clauseHead('17.  AUDIT RIGHTS');
-      para('In the event of a payment dispute or allegations of material breach, the Company reserves the right to request reasonable documentation from the Client to substantiate the Client\u2019s claims, at the Client\u2019s expense.');
-      para('The Client grants the Company the right to audit the use of any deliverables, systems, or licensed materials to ensure compliance with this Agreement. Any such audit shall be conducted with reasonable prior notice and at a mutually convenient time.');
-
-      clauseHead('18.  SEVERABILITY AND ENTIRE AGREEMENT');
-      para('If any provision of this Agreement is held to be invalid, illegal, or unenforceable by a court or arbitrator of competent jurisdiction, the remaining provisions shall continue in full force and effect. The invalid provision shall be modified to the minimum extent necessary to make it enforceable.');
-      para('This Agreement, together with the attached Deliverables Document, constitutes the entire agreement between the parties and supersedes all prior discussions, communications, representations, negotiations, or understandings \u2014 whether oral or written.');
-      para('No amendment shall be valid unless made in writing and executed by an authorized representative of the Company. No waiver of any breach shall constitute a waiver of any subsequent breach.');
-
-      clauseHead('19.  NOTICES');
-      para('All notices under this Agreement shall be in writing and delivered via: (a) registered post to the party\u2019s last known address; (b) email to the party\u2019s designated address with read receipt or acknowledgment; or (c) hand delivery with signed acknowledgment. Notices are effective upon confirmed receipt.');
-
-      clauseHead('20.  GOVERNING LAW');
-      para('This Agreement shall be governed by and construed in accordance with the laws of India. The courts of ' + city + ', India, shall have non-exclusive jurisdiction for any matters not subject to arbitration.');
-
-      sectionDiv('EXECUTION');
-      para('By signing below, the parties acknowledge that they have read, understood, and agree to be bound by all terms of this Master Services Agreement and the attached Deliverables Document.');
-
-      // Signature boxes
-      cp(50);
-      const half = (CW / 2) - 3;
-      doc.setFillColor(...BG_WARM);
-      doc.setDrawColor(...[200,195,188]);
-      doc.setLineWidth(0.3);
-      doc.rect(ML, y, half, 44, 'FD');
-      sf(7, 'bold', INK_MUTED);
-      doc.setCharSpace(2);
-      doc.text('CLIENT LEGAL NAME', ML + 4, y + 6);
-      doc.setCharSpace(0);
-      sf(9.5, 'bold', INK);
-      const clines = doc.splitTextToSize(client, half - 8);
-      clines.slice(0,2).forEach((l,i) => doc.text(l, ML + 4, y + 12 + i*4.5));
-      doc.setDrawColor(...[190,185,178]);
-      doc.setLineWidth(0.2);
-      doc.line(ML + 4, y + 26, ML + half - 4, y + 26);
-      sf(7, 'normal', INK_MUTED);
-      doc.text('SIGNATURE', ML + 4, y + 30);
-      doc.line(ML + 4, y + 37, ML + half - 4, y + 37);
-      doc.text('DATE', ML + 4, y + 41);
-
-      const rx = ML + half + 6;
-      doc.setFillColor(...BG_DARK);
-      doc.rect(rx, y, half, 44, 'F');
-      sf(7, 'bold', [158,149,137]);
-      doc.setCharSpace(1.5);
-      doc.text('FOR: THE HOUSE OF CHIRAG', rx + 4, y + 6);
-      doc.setCharSpace(0);
-      sf(9.5, 'bold', [245,239,230]);
-      const rlines = doc.splitTextToSize(rep, half - 8);
-      rlines.slice(0,2).forEach((l,i) => doc.text(l, rx + 4, y + 12 + i*4.5));
-      doc.setDrawColor(70, 65, 58);
-      doc.setLineWidth(0.2);
-      doc.line(rx + 4, y + 26, rx + half - 4, y + 26);
-      sf(7, 'normal', [120,112,100]);
-      doc.text('AUTHORIZED SIGNATORY', rx + 4, y + 30);
-      doc.line(rx + 4, y + 37, rx + half - 4, y + 37);
-      doc.text('DATE', rx + 4, y + 41);
-      y += 48;
-
-      cp(14);
-      para('This Agreement may be executed in counterparts, each of which shall be deemed an original. Electronic signatures shall be deemed valid and binding.');
-      cp(10);
-      doc.setDrawColor(...[200,195,188]);
-      doc.setLineWidth(0.2);
-      doc.line(ML, y, ML+CW, y);
-      y += 4;
-      sf(7, 'italic', INK_MUTED);
-      doc.text('CONFIDENTIAL DOCUMENT \u2014 FOR AUTHORIZED PARTIES ONLY', PW/2, y, { align: 'center' });
-
-      doc.save('HOC_MSA_' + safe.replace(/ /g,'_') + '.pdf');
-    } catch(err) {
-      console.error('MSA PDF error:', err);
-      alert('PDF generation failed: ' + err.message);
-    }
-    if(btn){ btn.textContent = '\u2b07 Download as PDF'; btn.disabled = false; }
+      Array.from(document.styleSheets).forEach(function(ss){
+        try { Array.from(ss.cssRules).forEach(function(r){ allStyles += r.cssText + '\n'; }); } catch(e){}
+      });
+    } catch(e){}
+    var win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">'
+      + '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>'
+      + '<style>'
+      + allStyles
+      + '@page{margin:12mm 14mm;size:A4}'
+      + '@media print{body{margin:0;padding:0;background:white}'
+      + '#msa-page{box-shadow:none!important;max-width:100%!important;margin:0!important;border:none!important}}'
+      + 'body{margin:0;padding:0;background:white;font-family:"DM Sans",sans-serif}'
+      + '#msa-page{background:white;padding:0;max-width:100%;margin:0}'
+      + '</style></head><body>'
+      + pageHTML
+      + '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close()};};<\/script>'
+      + '</body></html>');
+    win.document.close();
+  } catch(err) {
+    alert('Print failed: ' + err.message);
   }
-
-  // Load logo image as base64, then build PDF
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = function(){
-    const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth || 400;
-    canvas.height = img.naturalHeight || 400;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    const b64 = canvas.toDataURL('image/png');
-    buildMsaPdf(b64);
-  };
-  img.onerror = function(){
-    // If image can't load (CORS), build PDF without watermark
-    buildMsaPdf(null);
-  };
-  img.src = logoUrl + '?t=' + Date.now();
+  if(btn){ btn.textContent = "\u2b07 Download as PDF"; btn.disabled = false; }
 }
 
 
+
+
+// ════════════════════════════
+// INVOICE GENERATOR JS
+// ════════════════════════════
+var iLines = [
+  {desc:'',sub:'',phase:'',rate:'',qty:'1'},
+  {desc:'',sub:'',phase:'',rate:'',qty:'1'}
+];
+
+function iRenderLines(){
+  var c = document.getElementById('ii-lines');
+  if(!c) return;
+  c.innerHTML = '';
+  for(var i=0;i<iLines.length;i++){
+    (function(idx){
+      var item = iLines[idx];
+      var d = document.createElement('div');
+      d.style.cssText = 'margin-bottom:10px;padding:10px;background:var(--bg);border:1px solid var(--rule-strong)';
+      var removeHtml = iLines.length > 1
+        ? '<button onclick="iRemoveLine('+idx+')" style="background:none;border:1px solid var(--rule-strong);color:var(--ink-muted);cursor:pointer;font-size:14px;height:26px;width:26px;line-height:1;padding:0">&#215;</button>'
+        : '';
+      d.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><span style="font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-muted)">Item '+(idx+1)+'</span>'+removeHtml+'</div>'
+        +'<input class="ifi" style="display:block;width:100%;margin-bottom:4px;font-size:11px" placeholder="Service description" value="" oninput="iLines['+idx+'].desc=this.value;iSync()"/>'
+        +'<input class="ifi" style="display:block;width:100%;margin-bottom:4px;font-size:10.5px" placeholder="Sub-detail (optional)" value="" oninput="iLines['+idx+'].sub=this.value;iSync()"/>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">'
+        +'<input class="ifi" style="font-size:11px" placeholder="Phase" value="" oninput="iLines['+idx+'].phase=this.value;iSync()"/>'
+        +'<input class="ifi" style="font-size:11px" placeholder="Rate" value="" oninput="iLines['+idx+'].rate=this.value;iSync()"/>'
+        +'<input class="ifi" style="font-size:11px" placeholder="Qty" value="1" oninput="iLines['+idx+'].qty=this.value;iSync()"/>'
+        +'</div>';
+      c.appendChild(d);
+      // restore values
+      var inputs = d.querySelectorAll('input');
+      if(inputs[0]) inputs[0].value = item.desc;
+      if(inputs[1]) inputs[1].value = item.sub;
+      if(inputs[2]) inputs[2].value = item.phase;
+      if(inputs[3]) inputs[3].value = item.rate;
+      if(inputs[4]) inputs[4].value = item.qty;
+    })(i);
+  }
+}
+
+function iAddLine(){
+  iLines.push({desc:'',sub:'',phase:'',rate:'',qty:'1'});
+  iRenderLines(); iSync();
+}
+function iRemoveLine(i){
+  iLines.splice(i,1); iRenderLines(); iSync();
+}
+function iFmt(n){ return '\u20B9 '+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function iFmtD(v){ if(!v) return '\u2014'; var d=new Date(v+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}); }
+function iS(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+
+function iSync(){
+  var cn  = (document.getElementById('ii-cn')||{value:''}).value||'[Client Legal Name]';
+  var cb  = (document.getElementById('ii-cb')||{value:''}).value||'[Client Business]';
+  var cg  = (document.getElementById('ii-cg')||{value:''}).value||'';
+  var num = (document.getElementById('ii-num')||{value:''}).value||'HOC-2026-001';
+  var dt  = (document.getElementById('ii-dt')||{value:''}).value||'';
+  var due = (document.getElementById('ii-due')||{value:''}).value||'';
+  var eng = (document.getElementById('ii-eng')||{value:''}).value||'[Engagement Reference]';
+  var po  = (document.getElementById('ii-po')||{value:''}).value||'[PO / Reference]';
+  var upi = (document.getElementById('ii-upi')||{value:''}).value||'[UPI ID]';
+  var bnk = (document.getElementById('ii-bnk')||{value:''}).value||'[Bank Account Name]';
+  var acc = (document.getElementById('ii-acc')||{value:''}).value||'[Account Number]';
+  var ifc = (document.getElementById('ii-ifc')||{value:''}).value||'[IFSC / Bank Name]';
+  var gstEl = document.getElementById('ii-gst');
+  var gst = parseFloat(gstEl ? gstEl.value : 18);
+
+  iS('od-num',num); iS('od-num2',num);
+  iS('od-dt',iFmtD(dt)); iS('od-dt2',iFmtD(dt));
+  iS('od-due',iFmtD(due)); iS('od-due2',iFmtD(due)); iS('od-dc-due',iFmtD(due));
+  iS('od-eng',eng); iS('od-po',po);
+  iS('od-cn',cn); iS('od-cb',cb);
+  iS('od-upi',upi); iS('od-bnk',bnk); iS('od-acc',acc); iS('od-ifc',ifc);
+  var gw=document.getElementById('od-gw');
+  if(gw){gw.style.display=cg?'inline':'none'; iS('od-cg',cg);}
+
+  var tbody=document.getElementById('od-tbody');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  var subtotal=0;
+  for(var i=0;i<iLines.length;i++){
+    var item=iLines[i];
+    var rate=parseFloat(item.rate)||0;
+    var qty=parseFloat(item.qty)||0;
+    var amt=rate*qty;
+    subtotal+=amt;
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><div class="it-d">'+(item.desc||('<em style="color:var(--ink-muted)">Line item '+(i+1)+'</em>'))+'</div>'+(item.sub?'<div class="it-s">'+item.sub+'</div>':'')+'</td>'
+      +'<td class="it-r">'+(item.phase||'&#8212;')+'</td>'
+      +'<td class="it-r">'+(rate>0?iFmt(rate):'&#8212;')+'</td>'
+      +'<td class="it-r">'+(qty>0?qty:'&#8212;')+'</td>'
+      +'<td class="it-a">'+(amt>0?iFmt(amt):'&#8212;')+'</td>';
+    tbody.appendChild(tr);
+  }
+  var gstAmt=subtotal*gst/100;
+  var total=subtotal+gstAmt;
+  iS('od-sub',iFmt(subtotal));
+  iS('od-gl','GST ('+gst+'%)');
+  iS('od-gst',iFmt(gstAmt));
+  iS('od-tot',iFmt(total));
+  iS('od-dc-tot',iFmt(total));
+  var gr=document.getElementById('od-gr');
+  var gn=document.getElementById('od-gn');
+  if(gr) gr.style.display=gst===0?'none':'flex';
+  if(gn) gn.style.display=gst===0?'none':'block';
+}
+
+function iPrint(){
+  var btn = document.querySelector('.iab-p');
+  if(btn){ btn.textContent = 'Opening print...'; btn.disabled = true; }
+  // Hide team note before capturing
+  var tn = document.querySelector('.i-tnote');
+  if(tn) tn.style.display = 'none';
+  try {
+    var pageHTML = document.querySelector('#invoice-generator .invoice-page').outerHTML;
+    var allStyles = '';
+    try {
+      Array.from(document.styleSheets).forEach(function(ss){
+        try { Array.from(ss.cssRules).forEach(function(r){ allStyles += r.cssText + '\n'; }); } catch(e){}
+      });
+    } catch(e){}
+    var win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">'
+      + '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>'
+      + '<style>'
+      + allStyles
+      + '@page{margin:0;size:A4}'
+      + '@media print{body{margin:0;padding:0;background:white}'
+      + '.invoice-page{box-shadow:none!important;max-width:100%!important;margin:0!important}'
+      + '.i-tnote{display:none!important}}'
+      + 'body{margin:0;padding:0;background:white;font-family:"DM Sans",sans-serif}'
+      + '.invoice-page{max-width:100%;margin:0;box-shadow:none}'
+      + '</style></head><body>'
+      + pageHTML
+      + '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close()};};<\/script>'
+      + '</body></html>');
+    win.document.close();
+  } catch(err) {
+    alert('Print failed: ' + err.message);
+  }
+  if(tn) tn.style.display = '';
+  if(btn){ btn.textContent = '\u2193 Download as PDF'; btn.disabled = false; }
+}
+
+function iReset(){
+  var ids=['ii-cn','ii-cb','ii-cg','ii-num','ii-dt','ii-due','ii-eng','ii-po','ii-upi','ii-bnk','ii-acc','ii-ifc'];
+  for(var i=0;i<ids.length;i++){var e=document.getElementById(ids[i]);if(e)e.value='';}
+  var g=document.getElementById('ii-gst');if(g)g.value='18';
+  iLines=[{desc:'',sub:'',phase:'',rate:'',qty:'1'},{desc:'',sub:'',phase:'',rate:'',qty:'1'}];
+  iRenderLines(); iSync();
+}
+
+function iInit(){
+  iRenderLines();
+  var d=document.getElementById('ii-dt');
+  if(d&&!d.value) d.value=new Date().toISOString().split('T')[0];
+  iSync();
+}
+
 </script>
+
+<!-- ══════════════ INVOICE GENERATOR ══════════════ -->
+<div id="invoice-generator" class="screen">
+  <div class="inv-sb">
+    <button class="back-btn" onclick="showScreen('dashboard')">&#8592; Back</button>
+    <div class="sb-label">Module 03</div>
+    <div class="sb-title">Invoice Generator</div>
+    <div class="isb-rule"></div>
+    <div class="isb-sec">Client Details</div>
+    <div class="ifg"><label class="ifl">Client Legal Name</label><input class="ifi" id="ii-cn" type="text" placeholder="e.g. Rahul Sharma" oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Client Business / Entity</label><input class="ifi" id="ii-cb" type="text" placeholder="e.g. Sharma Ventures Pvt. Ltd." oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Client GSTIN (if applicable)</label><input class="ifi" id="ii-cg" type="text" placeholder="e.g. 29ABCDE1234F1Z5" oninput="iSync()"/></div>
+    <div class="isb-sec">Invoice Details</div>
+    <div class="ifg"><label class="ifl">Invoice Number</label><input class="ifi" id="ii-num" type="text" placeholder="e.g. HOC-2026-001" oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Invoice Date</label><input class="ifi" id="ii-dt" type="date" onchange="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Due Date</label><input class="ifi" id="ii-due" type="date" onchange="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Engagement Reference</label><input class="ifi" id="ii-eng" type="text" placeholder="e.g. Revenue Architecture Phase 1" oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">PO / Reference Number</label><input class="ifi" id="ii-po" type="text" placeholder="e.g. PO-2026-0087 or N/A" oninput="iSync()"/></div>
+    <div class="isb-sec">Payment Details</div>
+    <div class="ifg"><label class="ifl">UPI ID</label><input class="ifi" id="ii-upi" type="text" placeholder="e.g. hoc@icici" oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Bank Account Name</label><input class="ifi" id="ii-bnk" type="text" placeholder="e.g. The House of Chirag" oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">Account Number</label><input class="ifi" id="ii-acc" type="text" placeholder="e.g. XXXX XXXX 4321" oninput="iSync()"/></div>
+    <div class="ifg"><label class="ifl">IFSC / Bank Name</label><input class="ifi" id="ii-ifc" type="text" placeholder="e.g. ICIC0001234" oninput="iSync()"/></div>
+    <div class="isb-sec">Tax</div>
+    <div class="ifg"><label class="ifl">GST Rate</label>
+      <select class="ifs" id="ii-gst" onchange="iSync()">
+        <option value="0">0% (Not Applicable)</option>
+        <option value="5">5% GST</option>
+        <option value="12">12% GST</option>
+        <option value="18" selected>18% GST</option>
+        <option value="28">28% GST</option>
+      </select>
+    </div>
+    <div class="isb-sec">Scope &amp; Line Items</div>
+    <div id="ii-lines"></div>
+    <button class="i-add-btn" onclick="iAddLine()">+ Add Line Item</button>
+    <div class="isb-rule"></div>
+    <button class="iab iab-p" onclick="iPrint()">&#8595; Download as PDF</button>
+    <button class="iab iab-s" onclick="iReset()">&#8635; Reset All Fields</button>
+    <div class="isb-footer">Fill all fields then download PDF and send to client. Invoice is legally binding per the MSA.</div>
+  </div>
+  <div class="inv-preview">
+    <div class="invoice-page">
+      <div class="ih">
+        <div>
+          <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="HOC" class="ih-logo"/>
+          <div class="ih-name">The House of Chirag</div>
+          <div class="ih-sub">Revenue Architecture &middot; Operational Leverage &middot; Enterprise Value</div>
+        </div>
+        <div class="ih-right">
+          <div class="ih-badge">Tax Invoice</div>
+          <div class="ih-num" id="od-num">HOC-2026-001</div>
+          <div class="ih-meta">Date &nbsp;<strong id="od-dt">[Invoice Date]</strong></div>
+          <div class="ih-meta">Due &nbsp;<strong id="od-due" style="color:#B03030">[Due Date]</strong></div>
+        </div>
+      </div>
+      <div class="isb2">
+        <div class="isb2-item"><span class="isdot"></span><strong>Issued &amp; Awaiting Payment</strong></div>
+        <div class="isb2-item">Engagement: &nbsp;<strong id="od-eng">[Engagement Reference]</strong></div>
+        <div class="isb2-item">PO Ref: &nbsp;<strong id="od-po">[PO / Reference]</strong></div>
+      </div>
+      <div class="i-tnote">&#9888;&#65039; <strong>TEAM:</strong> Fill all sidebar fields before downloading. This notice will not appear in the PDF.</div>
+      <div class="ip">
+        <div>
+          <div class="ip-lbl">Billed From</div>
+          <div class="ip-name">The House of Chirag</div>
+          <div class="ip-det">Chirag L Gowda, Founder<br/>Bengaluru, Karnataka, India<br/><strong>Contact:</strong> Dhanush Devanga<br/><strong>Phone:</strong> +91 87920 35854</div>
+        </div>
+        <div>
+          <div class="ip-lbl">Billed To</div>
+          <div class="ip-name" id="od-cn">[Client Legal Name]</div>
+          <div class="ip-det"><span id="od-cb">[Client Business]</span><br/><span id="od-gw" style="display:none"><strong>GSTIN:</strong> <span id="od-cg"></span></span></div>
+        </div>
+      </div>
+      <div class="irb">
+        <div><div class="irb-key">Invoice No.</div><div class="irb-val" id="od-num2">HOC-2026-001</div></div>
+        <div><div class="irb-key">Invoice Date</div><div class="irb-val" id="od-dt2">&#8212;</div></div>
+        <div><div class="irb-key">Payment Due</div><div class="irb-val" id="od-due2" style="color:#B03030;font-weight:600">&#8212;</div></div>
+        <div><div class="irb-key">Currency</div><div class="irb-val">INR (&#8377;)</div></div>
+        <div><div class="irb-key">Terms</div><div class="irb-val">Due on Receipt</div></div>
+      </div>
+      <div class="its">
+        <div class="its-hd">Scope of Services &#8212; Itemised</div>
+        <table class="itbl">
+          <thead><tr>
+            <th style="width:48%">Description of Service / Deliverable</th>
+            <th class="tr" style="width:10%">Phase</th>
+            <th class="tr" style="width:18%">Rate (&#8377;)</th>
+            <th class="tr" style="width:12%">Qty</th>
+            <th class="tr" style="width:12%">Amount (&#8377;)</th>
+          </tr></thead>
+          <tbody id="od-tbody"></tbody>
+        </table>
+      </div>
+      <div class="i-gstnote" id="od-gn">All amounts exclusive of applicable GST.</div>
+      <div class="itot">
+        <div class="itot-b">
+          <div class="itr"><span>Subtotal</span><span id="od-sub">&#8377; 0.00</span></div>
+          <div class="itr" id="od-gr"><span id="od-gl">GST (18%)</span><span id="od-gst">&#8377; 0.00</span></div>
+          <div class="itr fin"><span>Total Due</span><span id="od-tot">&#8377; 0.00</span></div>
+        </div>
+      </div>
+      <div class="idc">
+        <div><div class="idc-lbl">Payment Due By</div><div class="idc-date" id="od-dc-due">[Due Date]</div></div>
+        <div class="idc-r"><div class="idc-lbl">Total Amount Due</div><div class="idc-amt" id="od-dc-tot">&#8377; 0.00</div></div>
+      </div>
+      <div class="ipay">
+        <div class="ipay-hd">Payment Instructions</div>
+        <div class="ipay-grid">
+          <div><div class="ipay-k">UPI / Instant Transfer</div><div class="ipay-v" id="od-upi">[UPI ID]</div></div>
+          <div><div class="ipay-k">Account Name</div><div class="ipay-v" id="od-bnk">[Bank Account Name]</div></div>
+          <div><div class="ipay-k">Account Number</div><div class="ipay-v" id="od-acc">[Account Number]</div></div>
+          <div><div class="ipay-k">IFSC / Bank</div><div class="ipay-v" id="od-ifc">[IFSC / Bank Name]</div></div>
+        </div>
+        <div class="itbox">
+          <strong>Financial Terms (MSA Cl. 2):</strong> All fees are final, non-refundable, non-cancellable, and non-reversible.<br/><br/>
+          <strong>Late Payment:</strong> Outstanding amounts accrue interest at <strong>5% per month, compounded monthly</strong> from the due date.<br/><br/>
+          <strong>Invoice Disputes (Cl. 9 &amp; 14):</strong> Disputes must be submitted in writing within <strong>7 calendar days</strong>. Silence constitutes full irrevocable acceptance.<br/><br/>
+          <strong>Chargeback Waiver:</strong> The Client irrevocably waives any right to initiate chargebacks or payment reversals through any channel.
+        </div>
+      </div>
+      <div class="ilgl">
+        <div class="ilgl-hd">Enforcement &amp; Legal Notice</div>
+        <div class="ilgl-txt">This invoice is issued pursuant to the MSA between The House of Chirag and the Client. All fees are final. Non-payment constitutes material breach entitling HOC to immediate suspension and liquidated damages of 3&times; contract value plus legal costs.</div>
+        <div class="ilgl-grid">
+          <div class="ilgl-c"><strong>Non-Refundable Fees:</strong> All fees final. Late balances accrue 5% per month compounded.</div>
+          <div class="ilgl-c"><strong>Chargeback Waiver:</strong> Client waives all reversal rights through any channel.</div>
+          <div class="ilgl-c"><strong>Invoice Disputes:</strong> Must be raised in writing within 7 days. Silence = full acceptance.</div>
+          <div class="ilgl-c"><strong>Limitation of Liability:</strong> HOC liability capped at prior 30-day fees or INR 5,000.</div>
+          <div class="ilgl-c"><strong>Confidentiality:</strong> Strictly confidential, for named Client only.</div>
+          <div class="ilgl-c"><strong>Governing Law:</strong> Laws of India. Arbitration in Bengaluru under Arbitration Act 1996.</div>
+        </div>
+      </div>
+      <div class="iftr">
+        <span>&copy; The House of Chirag &#8212; Confidential &amp; Proprietary</span>
+        <div class="iftr-brand">The House of Chirag</div>
+        <span>Build Revenue. Build Control. Build Assets.</span>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
