@@ -35,11 +35,23 @@
       width:100%;height:100%;object-fit:contain;
     }
     .wm-letter{
-      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      width:340px;height:340px;pointer-events:none;z-index:0;opacity:0.13;
+      position:fixed;top:50%;left:calc(50% + 146px);transform:translate(-50%,-50%);
+      width:300px;height:300px;pointer-events:none;z-index:0;opacity:0.10;
     }
     .wm-letter img{
       width:100%;height:100%;object-fit:contain;
+    }
+    /* Client agreement preview watermark — fixed position, never affects layout */
+    #client-agreement .wm-preview::after{
+      content:"";
+      position:fixed;
+      top:50%;left:calc(50% + 146px);
+      transform:translate(-50%,-50%);
+      width:300px;height:300px;
+      background:url('https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png') center/contain no-repeat;
+      opacity:0.08;
+      pointer-events:none;
+      z-index:0;
     }
 
     /* ── DASHBOARD ── */
@@ -436,9 +448,6 @@
 
 <!-- ══════════════ CLIENT AGREEMENT ══════════════ -->
 <div id="client-agreement" class="screen">
-  <div class="wm-letter" aria-hidden="true">
-    <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="" draggable="false"/>
-  </div>
 
   <div class="wm-sidebar">
     <button class="back-btn" onclick="showScreen('dashboard')">← Back</button>
@@ -473,8 +482,8 @@
       <div class="team-note">⚠️ <strong>TEAM:</strong> Fill Client Legal Name, Date, Arbitration City &amp; HOC Signatory in the sidebar. This notice won't appear in exports.</div>
 
       <!-- MSA Header -->
-      <div style="text-align:center;margin-bottom:8px">
-        <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="HOC" style="width:48px;height:48px;object-fit:contain;opacity:0.9"/>
+      <div style="text-align:center;margin-bottom:10px">
+        <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="HOC" style="width:72px;height:72px;object-fit:contain;opacity:1;display:inline-block"/>
       </div>
       <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);letter-spacing:3px;text-transform:uppercase">THE HOUSE OF CHIRAG</div>
       <div style="text-align:center;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:1px;margin-top:6px">MASTER SERVICES AGREEMENT</div>
