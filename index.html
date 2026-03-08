@@ -38,20 +38,22 @@
       position:fixed;top:50%;left:calc(50% + 146px);transform:translate(-50%,-50%);
       width:300px;height:300px;pointer-events:none;z-index:0;opacity:0.10;
     }
-    .wm-letter img{
-      width:100%;height:100%;object-fit:contain;
-    }
-    /* Client agreement preview watermark — fixed position, never affects layout */
-    #client-agreement .wm-preview::after{
-      content:"";
-      position:fixed;
-      top:50%;left:calc(50% + 146px);
+    .msa-watermark{
+      position:absolute;
+      top:50%;left:50%;
       transform:translate(-50%,-50%);
-      width:300px;height:300px;
-      background:url('https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png') center/contain no-repeat;
-      opacity:0.08;
+      width:280px;height:280px;
       pointer-events:none;
       z-index:0;
+      opacity:0.07;
+    }
+    .msa-watermark img{
+      width:100%;height:100%;object-fit:contain;display:block;
+    }
+    /* All direct children of letter-page sit above watermark */
+    .letter-page > *:not(.msa-watermark){
+      position:relative;
+      z-index:1;
     }
 
     /* ── DASHBOARD ── */
@@ -214,7 +216,11 @@
       max-width:720px;margin:0 auto;
       padding:68px 74px;
       box-shadow:0 2px 32px rgba(28,25,22,0.08);
-      position:relative;overflow:hidden;
+      position:relative;overflow:visible;
+    }
+    #msa-page{
+      padding:40px 64px;
+      overflow:hidden;
     }
     .letter-page::before{
       content:"";position:absolute;top:0;left:0;width:2px;height:100%;
@@ -478,7 +484,13 @@
   </div>
 
   <div class="wm-preview">
-    <div class="letter-page" id="msa-page" style="max-width:760px">
+    <div class="letter-page" id="msa-page">
+
+      <!-- Centred watermark inside the page -->
+      <div class="msa-watermark" aria-hidden="true">
+        <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="" draggable="false"/>
+      </div>
+
       <div class="team-note">⚠️ <strong>TEAM:</strong> Fill Client Legal Name, Date, Arbitration City &amp; HOC Signatory in the sidebar. This notice won't appear in exports.</div>
 
       <!-- MSA Header -->
@@ -1152,11 +1164,14 @@ function msaDownloadWord(){
     .sig-line-dark{border-top:1pt solid rgba(245,239,230,0.25);padding-top:5pt;font-size:8.5pt;color:rgba(245,239,230,0.45);margin-bottom:12pt}
     .sig-space{height:28pt}
     .footer-note{margin-top:28pt;padding-top:12pt;border-top:1pt solid #ddd;font-size:8.5pt;color:#9E9589;text-align:center;font-style:italic}
+    .wm-wrap{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:320pt;height:320pt;opacity:0.08;pointer-events:none;z-index:-1;text-align:center}
+    .wm-wrap img{width:320pt;height:320pt;object-fit:contain}
   `;
 
   const html = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="UTF-8"/><style>${css}</style></head><body>
+<div class="wm-wrap"><img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt=""/></div>
 <div class="center"><div class="brand">THE HOUSE OF CHIRAG</div>
 <div style="font-size:13pt;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;color:#1C1916;margin-top:6pt">MASTER SERVICES AGREEMENT</div>
 <div class="sub">Revenue Systems &bull; Growth Architecture &bull; Marketing Infrastructure</div></div>
@@ -1362,319 +1377,331 @@ function msaDownloadPDF(){
   const btn = document.querySelector('[onclick="msaDownloadPDF()"]');
   if(btn){ btn.textContent = 'Building PDF...'; btn.disabled = true; }
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const PW = 210, PH = 297;
-    const ML = 20, MR = 20, MT = 20;
-    const CW = PW - ML - MR;
-    let y = MT;
+  // Fetch logo as base64 first, then build PDF
+  const logoUrl = 'https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png';
 
-    const INK       = [28, 25, 22];
-    const INK_MID   = [58, 54, 48];
-    const INK_SOFT  = [107, 100, 89];
-    const INK_MUTED = [158, 149, 137];
-    const BG_WARM   = [254, 252, 249];
-    const BG_DARK   = [28, 25, 22];
+  function buildMsaPdf(logoB64){
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const PW = 210, PH = 297;
+      const ML = 20, MR = 20, MT = 20;
+      const CW = PW - ML - MR;
+      let y = MT;
+      let pageCount = 1;
 
-    function sf(size, style, color){
-      doc.setFontSize(size);
-      doc.setFont('helvetica', style || 'normal');
-      doc.setTextColor(...(color || INK));
-    }
-    function cp(needed){ if(y + needed > PH - 16){ doc.addPage(); y = MT; } }
-    function para(text, bold, color){
-      cp(6);
-      sf(9, bold ? 'bold' : 'normal', color || INK_MID);
-      doc.setLineHeightFactor(1.5);
-      const lines = doc.splitTextToSize(text, CW);
-      lines.forEach(l => { cp(5); doc.text(l, ML, y); y += 4.6; });
-      doc.setLineHeightFactor(1.15);
-      y += 1.5;
-    }
-    function bullet(items){
-      items.forEach(item => {
-        cp(5);
-        sf(9, 'normal', INK_MID);
+      const INK       = [28, 25, 22];
+      const INK_MID   = [58, 54, 48];
+      const INK_SOFT  = [107, 100, 89];
+      const INK_MUTED = [158, 149, 137];
+      const BG_WARM   = [254, 252, 249];
+      const BG_DARK   = [28, 25, 22];
+
+      // Draw watermark centred on current page
+      function drawWatermark(){
+        if(!logoB64) return;
+        const wmSize = 100; // 100mm square, centred on A4
+        const wx = (PW - wmSize) / 2;
+        const wy = (PH - wmSize) / 2;
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity: 0.07 }));
+        doc.addImage(logoB64, 'PNG', wx, wy, wmSize, wmSize);
+        doc.restoreGraphicsState();
+      }
+
+      // Draw watermark on page 1
+      drawWatermark();
+
+      function sf(size, style, color){
+        doc.setFontSize(size);
+        doc.setFont('helvetica', style || 'normal');
+        doc.setTextColor(...(color || INK));
+      }
+      function cp(needed){
+        if(y + needed > PH - 16){
+          doc.addPage();
+          pageCount++;
+          drawWatermark(); // watermark on every new page
+          y = MT;
+        }
+      }
+      function para(text, bold, color){
+        cp(6);
+        sf(9, bold ? 'bold' : 'normal', color || INK_MID);
         doc.setLineHeightFactor(1.5);
-        const lines = doc.splitTextToSize(item, CW - 8);
-        doc.text('\u2022', ML + 1, y);
-        lines.forEach((l, i) => { cp(5); doc.text(l, ML + 5, y); y += 4.6; });
+        const lines = doc.splitTextToSize(text, CW);
+        lines.forEach(l => { cp(5); doc.text(l, ML, y); y += 4.6; });
         doc.setLineHeightFactor(1.15);
-        y += 0.5;
-      });
-      y += 1;
-    }
-    function clauseHead(text){
-      cp(12);
-      y += 4;
-      sf(7.5, 'bold', INK);
-      doc.setCharSpace(0.8);
-      doc.text(text, ML, y);
+        y += 1.5;
+      }
+      function bullet(items){
+        items.forEach(item => {
+          cp(5);
+          sf(9, 'normal', INK_MID);
+          doc.setLineHeightFactor(1.5);
+          const lines = doc.splitTextToSize(item, CW - 8);
+          doc.text('\u2022', ML + 1, y);
+          lines.forEach((l, i) => { cp(5); doc.text(l, ML + 5, y); y += 4.6; });
+          doc.setLineHeightFactor(1.15);
+          y += 0.5;
+        });
+        y += 1;
+      }
+      function clauseHead(text){
+        cp(12);
+        y += 4;
+        sf(7.5, 'bold', INK);
+        doc.setCharSpace(0.8);
+        doc.text(text, ML, y);
+        doc.setCharSpace(0);
+        y += 1.2;
+        doc.setDrawColor(...INK_SOFT);
+        doc.setLineWidth(0.15);
+        doc.line(ML, y, ML + CW, y);
+        y += 4;
+      }
+      function sectionDiv(text){
+        cp(14);
+        y += 6;
+        doc.setFillColor(28, 25, 22);
+        doc.rect(ML, y - 3, CW, 9, 'F');
+        sf(8, 'bold', [245, 239, 230]);
+        doc.setCharSpace(2);
+        doc.text(text, PW/2, y + 3, { align: 'center' });
+        doc.setCharSpace(0);
+        y += 10;
+      }
+
+      // ── Header ──
+      // Logo centred at top of first page
+      if(logoB64){
+        const logoSize = 18;
+        doc.addImage(logoB64, 'PNG', (PW - logoSize)/2, y, logoSize, logoSize);
+        y += logoSize + 3;
+      }
+      sf(13, 'bold', INK);
+      doc.setCharSpace(3);
+      doc.text('THE HOUSE OF CHIRAG', PW/2, y, { align: 'center' });
       doc.setCharSpace(0);
-      y += 1.2;
-      doc.setDrawColor(...INK_SOFT);
-      doc.setLineWidth(0.15);
-      doc.line(ML, y, ML + CW, y);
+      y += 5;
+      sf(11, 'bold', INK);
+      doc.setCharSpace(1.5);
+      doc.text('MASTER SERVICES AGREEMENT', PW/2, y, { align: 'center' });
+      doc.setCharSpace(0);
+      y += 5;
+      sf(7, 'normal', INK_SOFT);
+      doc.setCharSpace(1.5);
+      doc.text('Revenue Systems  \u2022  Growth Architecture  \u2022  Marketing Infrastructure', PW/2, y, { align: 'center' });
+      doc.setCharSpace(0);
       y += 4;
-    }
-    function sectionDiv(text){
-      cp(14);
-      y += 6;
-      doc.setFillColor(28, 25, 22);
-      doc.rect(ML, y - 3, CW, 9, 'F');
-      sf(8, 'bold', [245, 239, 230]);
+      doc.setDrawColor(...INK);
+      doc.setLineWidth(0.4);
+      doc.line(ML, y, ML+CW, y);
+      y += 7;
+
+      // Preamble
+      para('This Master Services Agreement (the "Agreement") is entered into as of the date last signed below (the "Effective Date") by and between:');
+      para('The House of Chirag ("Company") \u2014 a professional services firm providing revenue systems architecture, strategic advisory, marketing infrastructure development, automation deployment, and associated execution services, and');
+      para(client + ' ("Client") \u2014 including its principals, officers, directors, owners, successors, assigns, and affiliated entities.');
+      para('By executing this Agreement, Client confirms that it has read, understood, and voluntarily accepted all terms herein as a condition of engagement.');
+
+      sectionDiv('OPERATIVE TERMS');
+
+      clauseHead('1.  ENGAGEMENT AND LEGAL RELATIONSHIP');
+      para('The Company provides strategic advisory, revenue systems architecture, marketing infrastructure development, automation deployment, and associated execution services.');
+      para('The Company operates strictly as an independent contractor. Nothing in this Agreement shall be interpreted to create a partnership, joint venture, agency relationship, fiduciary duty, employment relationship, profit-sharing arrangement, or any form of co-ownership between the parties.');
+      para('No agents, employees, or sub-contractors of the Company shall be deemed employees of the Client, and the Company assumes full responsibility for its team\u2019s tax obligations, benefits, and statutory entitlements.');
+      para('All strategic decisions, financial outcomes, operational execution, compliance obligations, and business performance remain solely the responsibility of the Client.');
+
+      clauseHead('2.  FINANCIAL TERMS AND ENFORCEMENT');
+      para('No services shall commence without receipt of cleared funds in accordance with the agreed payment structure set out in the applicable Scope of Services document.');
+      para('All fees paid to the Company are final, non-refundable, non-cancellable, non-transferable, and non-reversible under any circumstances.');
+      para('The Client expressly and irrevocably waives any right to initiate or pursue chargebacks, payment disputes, card reversals, bank recalls, escrow claims, platform disputes, or similar financial reversals through any channel, including but not limited to Stripe, PayPal, Razorpay, or any issuing bank.');
+      para('Any attempt to dispute or reverse payment shall constitute a material breach of this Agreement and shall entitle the Company, without limitation, to:');
+      bullet(['Immediate suspension or termination of all services','Revocation of all system and infrastructure access','Legal recovery of the full outstanding and disputed amounts','Recovery of all legal fees, collection costs, and enforcement expenses','Liquidated damages equal to three (3) times the total contract value \u2014 the parties agree this is a genuine pre-estimate of loss, not a penalty']);
+      para('Any overdue balance shall accrue interest at five percent (5%) per month, compounded monthly, from the due date until paid in full. Suspension of services due to non-payment does not constitute breach or give rise to any liability for the Company.');
+      para('Late payment fees and interest charges shall not be waivable except by written instrument signed by an authorized representative of the Company.');
+
+      clauseHead('3.  NO WARRANTY; DISCLAIMER OF RESULTS');
+      para('The Client acknowledges that the Company makes no representations, warranties, or guarantees \u2014 express, implied, or statutory \u2014 regarding revenue, profitability, return on investment, lead volume, conversion rate, growth rate, ranking, traffic, or any other measure of business performance.');
+      para('Marketing, advertising, and revenue performance are inherently subject to variables outside the Company\u2019s control, including but not limited to: market conditions, competitive dynamics, offer viability, pricing, budget levels, sales execution, fulfillment capacity, platform policy changes, algorithm updates, and regulatory shifts.');
+      para('Any forecasts, illustrations, projections, or case studies shared by the Company are for informational context only. They do not constitute guarantees, binding targets, or representations of likely outcomes.');
+      para('THE COMPANY EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THE CLIENT ASSUMES FULL COMMERCIAL RISK.', true);
+
+      clauseHead('4.  CLIENT RESPONSIBILITIES AND RISK ALLOCATION');
+      para('The Client retains sole and exclusive responsibility for:');
+      bullet(['Sales conversion, closing, and revenue generation','Product and service development, quality, and fulfilment','Customer satisfaction, complaints, and dispute resolution','Refund policies and processing','Regulatory, licensing, and statutory compliance in all relevant jurisdictions','Tax obligations, GST, income declarations, and financial reporting','Advertising standards compliance and platform policy adherence','Intellectual property ownership of the Client\u2019s products, services, and brand','Data protection obligations relating to the Client\u2019s customer base']);
+      para('The Company shall not be liable for business losses, platform suspensions, regulatory penalties, customer disputes, reputational damage, or operational deficiencies arising from the Client\u2019s business conduct.');
+      para('Risk allocation under this Agreement is intentional and reflects the pricing structure. The Client has had the opportunity to seek independent legal advice prior to execution.');
+
+      clauseHead('5.  CONFIDENTIALITY');
+      para('Each party agrees to hold the other\u2019s Confidential Information in strict confidence and not to disclose it to any third party without prior written consent, except as required by law.');
+      para('\u201cConfidential Information\u201d means all non-public information disclosed by one party to the other in connection with this Agreement, whether in written, oral, digital, or visual form, including but not limited to: business strategies, financial data, client lists, system architecture, methodologies, pricing, and operational processes.');
+      para('Confidentiality obligations shall survive termination of this Agreement for a period of five (5) years. Obligations with respect to trade secrets shall survive indefinitely.');
+      para('Exceptions: Confidentiality obligations do not apply to information that (a) is or becomes publicly known through no breach of this Agreement; (b) was rightfully known by the receiving party before disclosure; (c) is independently developed without use of the Confidential Information; or (d) is required to be disclosed by law or court order, provided the disclosing party is notified promptly to seek a protective order.');
+      para('Upon termination, each party shall promptly return or certify destruction of the other party\u2019s Confidential Information upon written request.');
+
+      clauseHead('6.  INTELLECTUAL PROPERTY AND SYSTEMS OWNERSHIP');
+      para('All proprietary frameworks, methodologies, systems, strategies, documents, automation structures, advertising architecture, tracking configurations, scripts, templates, creative assets, and internal processes developed or utilized by the Company remain the exclusive intellectual property of The House of Chirag, including all underlying trade secrets, copyrights, and know-how.');
+      para('Pre-Existing IP: Each party retains all rights to intellectual property it owned prior to the Effective Date. The Company\u2019s licence to use the Client\u2019s pre-existing materials is limited solely to the performance of services under this Agreement.');
+      para('The Client is granted a limited, revocable, non-exclusive, non-transferable, non-sublicensable licence to use deliverables strictly for internal business purposes, contingent on full financial compliance with this Agreement.');
+      para('The Company may retain administrative or structural control over advertising accounts, automation platforms, tracking systems, and related infrastructure during the engagement period.');
+      para('In the event of non-payment, breach, dispute initiation, or misuse of Company intellectual property, the Company reserves the right to revoke access immediately and without prior notice.');
+      para('Any attempt to reproduce, reverse-engineer, distribute, resell, teach, or commercially exploit the Company\u2019s intellectual property \u2014 by the Client, its employees, affiliates, or agents \u2014 shall constitute willful infringement and be subject to injunctive relief, damages, and full legal enforcement.');
+
+      clauseHead('7.  DATA PROTECTION AND SECURITY');
+      para('Each party shall comply with all applicable data protection laws in relation to personal data processed in connection with this Agreement, including the Information Technology Act, 2000 (India) and its applicable amendments, as well as any international data protection laws relevant to the Client\u2019s customer base.');
+      para('The Company shall implement reasonable organisational and technical measures to safeguard any Client data shared with the Company in performance of services, including access controls, encryption at rest and in transit, and security monitoring.');
+      para('In the event of a security incident involving Client data, the Company shall notify the Client within 72 hours of becoming aware of such incident and cooperate in remediation efforts.');
+      para('The Client represents that it has obtained all necessary consents and authorisations for any personal data it provides to the Company in connection with this Agreement.');
+      para('Upon termination of this Agreement, the Company shall delete or return Client-provided personal data within 30 days of written request, subject to any legal retention obligations.');
+
+      clauseHead('8.  FORCE MAJEURE');
+      para('Neither party shall be liable for failure to perform its obligations under this Agreement to the extent such failure is caused by events beyond its reasonable control, including but not limited to: acts of God, natural disasters, pandemics, epidemic outbreaks, wars, government actions, civil unrest, cyberattacks, critical internet or platform infrastructure failures, power outages, or regulatory shutdowns ("Force Majeure Event").');
+      para('The affected party must: (a) provide written notice to the other party within 7 business days of the onset of the Force Majeure Event; (b) use commercially reasonable efforts to mitigate the impact; and (c) resume performance promptly when the event concludes.');
+      para('If a Force Majeure Event continues for more than 60 consecutive days, either party may terminate this Agreement upon 14 days written notice without penalty. Any fees already paid to the Company for services rendered prior to the Force Majeure Event are non-refundable.');
+
+      sectionDiv('LIABILITY, DISPUTE & GOVERNANCE');
+
+      clauseHead('9.  DELIVERABLES AND SCOPE OF WORK');
+      para('The specific services, scope of work, phases, milestones, timelines, and deliverables to be provided by the Company shall be set forth in a separate Scope of Services & Deliverables document ("Deliverables Document"), attached hereto and incorporated by reference.');
+      para('Only those services expressly described in the Deliverables Document constitute binding obligations of the Company. No verbal statements, proposals, informal communications, sales discussions, or marketing materials shall expand or modify scope unless documented in writing and countersigned by an authorized representative of the Company.');
+      para('Change Requests: Any request by the Client to modify the scope of work shall be submitted in writing. The Company shall assess and respond within 7 business days with revised terms and fees. No change to scope takes effect until documented in a signed amendment.');
+      para('In the event of interpretive ambiguity as to scope, determination shall rest exclusively with the Company. Failure by the Client to review the Deliverables Document shall not impair its enforceability.');
+
+      clauseHead('10.  LIMITATION OF LIABILITY');
+      para('To the maximum extent permitted by applicable law, the Company\u2019s total aggregate liability for all claims arising out of or relating to this Agreement shall not exceed the lesser of (a) the total fees paid by the Client during the thirty (30) days preceding the event giving rise to the claim, or (b) INR 50,000 (fifty thousand Indian rupees).');
+      para('UNDER NO CIRCUMSTANCES SHALL THE COMPANY BE LIABLE FOR INDIRECT, INCIDENTAL, CONSEQUENTIAL, PUNITIVE, SPECIAL, OR EXEMPLARY DAMAGES \u2014 INCLUDING LOST PROFITS, LOST REVENUE, BUSINESS INTERRUPTION, REPUTATIONAL DAMAGE, DATA LOSS, OR OPPORTUNITY COSTS \u2014 EVEN IF ADVISED OF THEIR POSSIBILITY.', true);
+      para('The Client acknowledges that this limitation reflects the agreed allocation of risk and is fundamental to the commercial basis of the engagement.');
+      para('Severability of Limitation: If any part of this limitation is held unenforceable, the remainder of the limitation clause shall continue in full force.');
+
+      clauseHead('11.  INDEMNIFICATION');
+      para('The Client agrees to indemnify, defend, and hold harmless The House of Chirag and its owners, officers, employees, contractors, and affiliates from and against all claims, liabilities, damages, losses, penalties, fines, settlements, judgments, and legal expenses (including reasonable attorney\u2019s fees) arising from or relating to:');
+      bullet(['The Client\u2019s business operations, products, or services','Customer complaints, disputes, or regulatory investigations','Fulfilment failures, product defects, or service delivery issues','Advertising, platform policy, or regulatory compliance breaches','Intellectual property disputes relating to the Client\u2019s offerings','Tax, financial misconduct, or statutory violations','Any payment disputes or chargeback attempts initiated by the Client','Any misuse of the Company\u2019s proprietary systems or deliverables']);
+      para('This indemnification obligation shall survive termination of this Agreement indefinitely.');
+
+      clauseHead('12.  NON-DISPARAGEMENT');
+      para('The Client agrees not to make, publish, communicate, or distribute \u2014 in any form, whether written, verbal, digital, on social media, in reviews, or through third parties \u2014 any statement that could reasonably be interpreted as negative, defamatory, misleading, or harmful to the reputation, brand, or commercial standing of The House of Chirag.');
+      para('The Client expressly acknowledges that truth shall not constitute a defense to breach of this provision.');
+      para('Violation of this clause shall entitle the Company to liquidated damages equal to three (3) times the total contract value, plus injunctive relief and full recovery of legal costs.');
+
+      clauseHead('13.  NON-SOLICITATION');
+      para('During the term of this Agreement and for a period of twenty-four (24) months following termination, the Client shall not, directly or indirectly:');
+      bullet(['Solicit, recruit, or engage any employee, contractor, or sub-contractor of the Company','Attempt to circumvent the Company by directly engaging any vendor, supplier, or platform partner introduced by the Company in the course of services']);
+      para('Breach of this clause shall entitle the Company to liquidated damages equal to the greater of (a) six (6) months of the contracted fee, or (b) three (3) times the value of any engagement established in breach.');
+
+      clauseHead('14.  DISPUTE RESOLUTION');
+      para('The parties shall first attempt to resolve any dispute through good faith negotiation within 15 days of written notice of the dispute.');
+      para('If unresolved, any dispute arising from or relating to this Agreement shall be submitted to binding arbitration, administered in ' + city + ', India, under the Arbitration and Conciliation Act, 1996 (as amended). The arbitration shall be conducted by a sole arbitrator mutually agreed upon by the parties, or appointed in accordance with the Act.');
+      para('The Client expressly waives any right to trial by jury and agrees not to participate in any class action, representative action, or collective proceeding against the Company.');
+      para('If the Company prevails in any dispute, the Client shall be responsible for all legal fees, arbitration costs, and enforcement expenses. The Company\u2019s right to seek injunctive relief in any court of competent jurisdiction is preserved.');
+
+      clauseHead('15.  TERMINATION');
+      para('The Company may terminate this Agreement at its sole discretion with or without cause, upon 7 days written notice to the Client.');
+      para('The Client may request termination in writing. Termination by the Client does not entitle the Client to any refund of fees paid.');
+      para('Upon termination: (a) all outstanding amounts become immediately due and payable; (b) the Client\u2019s licence to use deliverables terminates immediately upon any payment default; and (c) each party shall return or destroy the other\u2019s Confidential Information within 30 days.');
+      para('The following provisions survive termination indefinitely: payment obligations, intellectual property rights, confidentiality, limitation of liability, indemnification, non-disparagement, non-solicitation, and dispute resolution.');
+
+      clauseHead('16.  REPRESENTATIONS AND WARRANTIES');
+      para('Each party represents and warrants to the other that:');
+      bullet(['It has full legal authority and capacity to enter into this Agreement','This Agreement has been duly authorized by all necessary actions','Execution and performance do not violate any applicable law, regulation, or third-party agreement','It is not a party to any litigation, arbitration, or regulatory action that would materially affect its ability to perform under this Agreement']);
+      para('The Client additionally represents and warrants that:');
+      bullet(['It owns or has the rights to all materials, data, and intellectual property it provides to the Company','Its business operations are conducted in compliance with all applicable laws','It has obtained all necessary licences and regulatory approvals to conduct its business']);
+
+      clauseHead('17.  AUDIT RIGHTS');
+      para('In the event of a payment dispute or allegations of material breach, the Company reserves the right to request reasonable documentation from the Client to substantiate the Client\u2019s claims, at the Client\u2019s expense.');
+      para('The Client grants the Company the right to audit the use of any deliverables, systems, or licensed materials to ensure compliance with this Agreement. Any such audit shall be conducted with reasonable prior notice and at a mutually convenient time.');
+
+      clauseHead('18.  SEVERABILITY AND ENTIRE AGREEMENT');
+      para('If any provision of this Agreement is held to be invalid, illegal, or unenforceable by a court or arbitrator of competent jurisdiction, the remaining provisions shall continue in full force and effect. The invalid provision shall be modified to the minimum extent necessary to make it enforceable.');
+      para('This Agreement, together with the attached Deliverables Document, constitutes the entire agreement between the parties and supersedes all prior discussions, communications, representations, negotiations, or understandings \u2014 whether oral or written.');
+      para('No amendment shall be valid unless made in writing and executed by an authorized representative of the Company. No waiver of any breach shall constitute a waiver of any subsequent breach.');
+
+      clauseHead('19.  NOTICES');
+      para('All notices under this Agreement shall be in writing and delivered via: (a) registered post to the party\u2019s last known address; (b) email to the party\u2019s designated address with read receipt or acknowledgment; or (c) hand delivery with signed acknowledgment. Notices are effective upon confirmed receipt.');
+
+      clauseHead('20.  GOVERNING LAW');
+      para('This Agreement shall be governed by and construed in accordance with the laws of India. The courts of ' + city + ', India, shall have non-exclusive jurisdiction for any matters not subject to arbitration.');
+
+      sectionDiv('EXECUTION');
+      para('By signing below, the parties acknowledge that they have read, understood, and agree to be bound by all terms of this Master Services Agreement and the attached Deliverables Document.');
+
+      // Signature boxes
+      cp(50);
+      const half = (CW / 2) - 3;
+      doc.setFillColor(...BG_WARM);
+      doc.setDrawColor(...[200,195,188]);
+      doc.setLineWidth(0.3);
+      doc.rect(ML, y, half, 44, 'FD');
+      sf(7, 'bold', INK_MUTED);
       doc.setCharSpace(2);
-      doc.text(text, PW/2, y + 3, { align: 'center' });
+      doc.text('CLIENT LEGAL NAME', ML + 4, y + 6);
       doc.setCharSpace(0);
-      y += 10;
+      sf(9.5, 'bold', INK);
+      const clines = doc.splitTextToSize(client, half - 8);
+      clines.slice(0,2).forEach((l,i) => doc.text(l, ML + 4, y + 12 + i*4.5));
+      doc.setDrawColor(...[190,185,178]);
+      doc.setLineWidth(0.2);
+      doc.line(ML + 4, y + 26, ML + half - 4, y + 26);
+      sf(7, 'normal', INK_MUTED);
+      doc.text('SIGNATURE', ML + 4, y + 30);
+      doc.line(ML + 4, y + 37, ML + half - 4, y + 37);
+      doc.text('DATE', ML + 4, y + 41);
+
+      const rx = ML + half + 6;
+      doc.setFillColor(...BG_DARK);
+      doc.rect(rx, y, half, 44, 'F');
+      sf(7, 'bold', [158,149,137]);
+      doc.setCharSpace(1.5);
+      doc.text('FOR: THE HOUSE OF CHIRAG', rx + 4, y + 6);
+      doc.setCharSpace(0);
+      sf(9.5, 'bold', [245,239,230]);
+      const rlines = doc.splitTextToSize(rep, half - 8);
+      rlines.slice(0,2).forEach((l,i) => doc.text(l, rx + 4, y + 12 + i*4.5));
+      doc.setDrawColor(70, 65, 58);
+      doc.setLineWidth(0.2);
+      doc.line(rx + 4, y + 26, rx + half - 4, y + 26);
+      sf(7, 'normal', [120,112,100]);
+      doc.text('AUTHORIZED SIGNATORY', rx + 4, y + 30);
+      doc.line(rx + 4, y + 37, rx + half - 4, y + 37);
+      doc.text('DATE', rx + 4, y + 41);
+      y += 48;
+
+      cp(14);
+      para('This Agreement may be executed in counterparts, each of which shall be deemed an original. Electronic signatures shall be deemed valid and binding.');
+      cp(10);
+      doc.setDrawColor(...[200,195,188]);
+      doc.setLineWidth(0.2);
+      doc.line(ML, y, ML+CW, y);
+      y += 4;
+      sf(7, 'italic', INK_MUTED);
+      doc.text('CONFIDENTIAL DOCUMENT \u2014 FOR AUTHORIZED PARTIES ONLY', PW/2, y, { align: 'center' });
+
+      doc.save('HOC_MSA_' + safe.replace(/ /g,'_') + '.pdf');
+    } catch(err) {
+      console.error('MSA PDF error:', err);
+      alert('PDF generation failed: ' + err.message);
     }
-
-    // ── Header ──
-    sf(13, 'bold', INK);
-    doc.setCharSpace(3);
-    doc.text('THE HOUSE OF CHIRAG', PW/2, y, { align: 'center' });
-    doc.setCharSpace(0);
-    y += 5;
-    sf(11, 'bold', INK);
-    doc.setCharSpace(1.5);
-    doc.text('MASTER SERVICES AGREEMENT', PW/2, y, { align: 'center' });
-    doc.setCharSpace(0);
-    y += 5;
-    sf(7, 'normal', INK_SOFT);
-    doc.setCharSpace(1.5);
-    doc.text('Revenue Systems  \u2022  Growth Architecture  \u2022  Marketing Infrastructure', PW/2, y, { align: 'center' });
-    doc.setCharSpace(0);
-    y += 4;
-    doc.setDrawColor(...INK);
-    doc.setLineWidth(0.4);
-    doc.line(ML, y, ML+CW, y);
-    y += 7;
-
-    // Preamble
-    para('This Master Services Agreement (the "Agreement") is entered into as of the date last signed below (the "Effective Date") by and between:');
-    para('The House of Chirag ("Company") \u2014 a professional services firm providing revenue systems architecture, strategic advisory, marketing infrastructure development, automation deployment, and associated execution services, and');
-    para(client + ' ("Client") \u2014 including its principals, officers, directors, owners, successors, assigns, and affiliated entities.');
-    para('By executing this Agreement, Client confirms that it has read, understood, and voluntarily accepted all terms herein as a condition of engagement.');
-
-    sectionDiv('OPERATIVE TERMS');
-
-    clauseHead('1.  ENGAGEMENT AND LEGAL RELATIONSHIP');
-    para('The Company provides strategic advisory, revenue systems architecture, marketing infrastructure development, automation deployment, and associated execution services.');
-    para('The Company operates strictly as an independent contractor. Nothing in this Agreement shall be interpreted to create a partnership, joint venture, agency relationship, fiduciary duty, employment relationship, profit-sharing arrangement, or any form of co-ownership between the parties.');
-    para('No agents, employees, or sub-contractors of the Company shall be deemed employees of the Client, and the Company assumes full responsibility for its team\u2019s tax obligations, benefits, and statutory entitlements.');
-    para('All strategic decisions, financial outcomes, operational execution, compliance obligations, and business performance remain solely the responsibility of the Client.');
-
-    clauseHead('2.  FINANCIAL TERMS AND ENFORCEMENT');
-    para('No services shall commence without receipt of cleared funds in accordance with the agreed payment structure set out in the applicable Scope of Services document.');
-    para('All fees paid to the Company are final, non-refundable, non-cancellable, non-transferable, and non-reversible under any circumstances.');
-    para('The Client expressly and irrevocably waives any right to initiate or pursue chargebacks, payment disputes, card reversals, bank recalls, escrow claims, platform disputes, or similar financial reversals through any channel, including but not limited to Stripe, PayPal, Razorpay, or any issuing bank.');
-    para('Any attempt to dispute or reverse payment shall constitute a material breach of this Agreement and shall entitle the Company, without limitation, to:');
-    bullet([
-      'Immediate suspension or termination of all services',
-      'Revocation of all system and infrastructure access',
-      'Legal recovery of the full outstanding and disputed amounts',
-      'Recovery of all legal fees, collection costs, and enforcement expenses',
-      'Liquidated damages equal to three (3) times the total contract value \u2014 the parties agree this is a genuine pre-estimate of loss, not a penalty'
-    ]);
-    para('Any overdue balance shall accrue interest at five percent (5%) per month, compounded monthly, from the due date until paid in full. Suspension of services due to non-payment does not constitute breach or give rise to any liability for the Company.');
-    para('Late payment fees and interest charges shall not be waivable except by written instrument signed by an authorized representative of the Company.');
-
-    clauseHead('3.  NO WARRANTY; DISCLAIMER OF RESULTS');
-    para('The Client acknowledges that the Company makes no representations, warranties, or guarantees \u2014 express, implied, or statutory \u2014 regarding revenue, profitability, return on investment, lead volume, conversion rate, growth rate, ranking, traffic, or any other measure of business performance.');
-    para('Marketing, advertising, and revenue performance are inherently subject to variables outside the Company\u2019s control, including but not limited to: market conditions, competitive dynamics, offer viability, pricing, budget levels, sales execution, fulfillment capacity, platform policy changes, algorithm updates, and regulatory shifts.');
-    para('Any forecasts, illustrations, projections, or case studies shared by the Company are for informational context only. They do not constitute guarantees, binding targets, or representations of likely outcomes.');
-    para('THE COMPANY EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THE CLIENT ASSUMES FULL COMMERCIAL RISK.', true);
-
-    clauseHead('4.  CLIENT RESPONSIBILITIES AND RISK ALLOCATION');
-    para('The Client retains sole and exclusive responsibility for:');
-    bullet([
-      'Sales conversion, closing, and revenue generation',
-      'Product and service development, quality, and fulfilment',
-      'Customer satisfaction, complaints, and dispute resolution',
-      'Refund policies and processing',
-      'Regulatory, licensing, and statutory compliance in all relevant jurisdictions',
-      'Tax obligations, GST, income declarations, and financial reporting',
-      'Advertising standards compliance and platform policy adherence',
-      'Intellectual property ownership of the Client\u2019s products, services, and brand',
-      'Data protection obligations relating to the Client\u2019s customer base'
-    ]);
-    para('The Company shall not be liable for business losses, platform suspensions, regulatory penalties, customer disputes, reputational damage, or operational deficiencies arising from the Client\u2019s business conduct.');
-    para('Risk allocation under this Agreement is intentional and reflects the pricing structure. The Client has had the opportunity to seek independent legal advice prior to execution.');
-
-    clauseHead('5.  CONFIDENTIALITY');
-    para('Each party agrees to hold the other\u2019s Confidential Information in strict confidence and not to disclose it to any third party without prior written consent, except as required by law.');
-    para('\u201cConfidential Information\u201d means all non-public information disclosed by one party to the other in connection with this Agreement, whether in written, oral, digital, or visual form, including but not limited to: business strategies, financial data, client lists, system architecture, methodologies, pricing, and operational processes.');
-    para('Confidentiality obligations shall survive termination of this Agreement for a period of five (5) years. Obligations with respect to trade secrets shall survive indefinitely.');
-    para('Exceptions: Confidentiality obligations do not apply to information that (a) is or becomes publicly known through no breach of this Agreement; (b) was rightfully known by the receiving party before disclosure; (c) is independently developed without use of the Confidential Information; or (d) is required to be disclosed by law or court order, provided the disclosing party is notified promptly to seek a protective order.');
-    para('Upon termination, each party shall promptly return or certify destruction of the other party\u2019s Confidential Information upon written request.');
-
-    clauseHead('6.  INTELLECTUAL PROPERTY AND SYSTEMS OWNERSHIP');
-    para('All proprietary frameworks, methodologies, systems, strategies, documents, automation structures, advertising architecture, tracking configurations, scripts, templates, creative assets, and internal processes developed or utilized by the Company remain the exclusive intellectual property of The House of Chirag, including all underlying trade secrets, copyrights, and know-how.');
-    para('Pre-Existing IP: Each party retains all rights to intellectual property it owned prior to the Effective Date. The Company\u2019s licence to use the Client\u2019s pre-existing materials is limited solely to the performance of services under this Agreement.');
-    para('The Client is granted a limited, revocable, non-exclusive, non-transferable, non-sublicensable licence to use deliverables strictly for internal business purposes, contingent on full financial compliance with this Agreement.');
-    para('The Company may retain administrative or structural control over advertising accounts, automation platforms, tracking systems, and related infrastructure during the engagement period.');
-    para('In the event of non-payment, breach, dispute initiation, or misuse of Company intellectual property, the Company reserves the right to revoke access immediately and without prior notice.');
-    para('Any attempt to reproduce, reverse-engineer, distribute, resell, teach, or commercially exploit the Company\u2019s intellectual property \u2014 by the Client, its employees, affiliates, or agents \u2014 shall constitute willful infringement and be subject to injunctive relief, damages, and full legal enforcement.');
-
-    clauseHead('7.  DATA PROTECTION AND SECURITY');
-    para('Each party shall comply with all applicable data protection laws in relation to personal data processed in connection with this Agreement, including the Information Technology Act, 2000 (India) and its applicable amendments, as well as any international data protection laws relevant to the Client\u2019s customer base.');
-    para('The Company shall implement reasonable organisational and technical measures to safeguard any Client data shared with the Company in performance of services, including access controls, encryption at rest and in transit, and security monitoring.');
-    para('In the event of a security incident involving Client data, the Company shall notify the Client within 72 hours of becoming aware of such incident and cooperate in remediation efforts.');
-    para('The Client represents that it has obtained all necessary consents and authorisations for any personal data it provides to the Company in connection with this Agreement.');
-    para('Upon termination of this Agreement, the Company shall delete or return Client-provided personal data within 30 days of written request, subject to any legal retention obligations.');
-
-    clauseHead('8.  FORCE MAJEURE');
-    para('Neither party shall be liable for failure to perform its obligations under this Agreement to the extent such failure is caused by events beyond its reasonable control, including but not limited to: acts of God, natural disasters, pandemics, epidemic outbreaks, wars, government actions, civil unrest, cyberattacks, critical internet or platform infrastructure failures, power outages, or regulatory shutdowns ("Force Majeure Event").');
-    para('The affected party must: (a) provide written notice to the other party within 7 business days of the onset of the Force Majeure Event; (b) use commercially reasonable efforts to mitigate the impact; and (c) resume performance promptly when the event concludes.');
-    para('If a Force Majeure Event continues for more than 60 consecutive days, either party may terminate this Agreement upon 14 days written notice without penalty. Any fees already paid to the Company for services rendered prior to the Force Majeure Event are non-refundable.');
-
-    sectionDiv('LIABILITY, DISPUTE & GOVERNANCE');
-
-    clauseHead('9.  DELIVERABLES AND SCOPE OF WORK');
-    para('The specific services, scope of work, phases, milestones, timelines, and deliverables to be provided by the Company shall be set forth in a separate Scope of Services & Deliverables document ("Deliverables Document"), attached hereto and incorporated by reference.');
-    para('Only those services expressly described in the Deliverables Document constitute binding obligations of the Company. No verbal statements, proposals, informal communications, sales discussions, or marketing materials shall expand or modify scope unless documented in writing and countersigned by an authorized representative of the Company.');
-    para('Change Requests: Any request by the Client to modify the scope of work shall be submitted in writing. The Company shall assess and respond within 7 business days with revised terms and fees. No change to scope takes effect until documented in a signed amendment.');
-    para('In the event of interpretive ambiguity as to scope, determination shall rest exclusively with the Company. Failure by the Client to review the Deliverables Document shall not impair its enforceability.');
-
-    clauseHead('10.  LIMITATION OF LIABILITY');
-    para('To the maximum extent permitted by applicable law, the Company\u2019s total aggregate liability for all claims arising out of or relating to this Agreement shall not exceed the lesser of (a) the total fees paid by the Client during the thirty (30) days preceding the event giving rise to the claim, or (b) INR 50,000 (fifty thousand Indian rupees).');
-    para('UNDER NO CIRCUMSTANCES SHALL THE COMPANY BE LIABLE FOR INDIRECT, INCIDENTAL, CONSEQUENTIAL, PUNITIVE, SPECIAL, OR EXEMPLARY DAMAGES \u2014 INCLUDING LOST PROFITS, LOST REVENUE, BUSINESS INTERRUPTION, REPUTATIONAL DAMAGE, DATA LOSS, OR OPPORTUNITY COSTS \u2014 EVEN IF ADVISED OF THEIR POSSIBILITY.', true);
-    para('The Client acknowledges that this limitation reflects the agreed allocation of risk and is fundamental to the commercial basis of the engagement.');
-    para('Severability of Limitation: If any part of this limitation is held unenforceable, the remainder of the limitation clause shall continue in full force.');
-
-    clauseHead('11.  INDEMNIFICATION');
-    para('The Client agrees to indemnify, defend, and hold harmless The House of Chirag and its owners, officers, employees, contractors, and affiliates from and against all claims, liabilities, damages, losses, penalties, fines, settlements, judgments, and legal expenses (including reasonable attorney\u2019s fees) arising from or relating to:');
-    bullet([
-      'The Client\u2019s business operations, products, or services',
-      'Customer complaints, disputes, or regulatory investigations',
-      'Fulfilment failures, product defects, or service delivery issues',
-      'Advertising, platform policy, or regulatory compliance breaches',
-      'Intellectual property disputes relating to the Client\u2019s offerings',
-      'Tax, financial misconduct, or statutory violations',
-      'Any payment disputes or chargeback attempts initiated by the Client',
-      'Any misuse of the Company\u2019s proprietary systems or deliverables'
-    ]);
-    para('This indemnification obligation shall survive termination of this Agreement indefinitely.');
-
-    clauseHead('12.  NON-DISPARAGEMENT');
-    para('The Client agrees not to make, publish, communicate, or distribute \u2014 in any form, whether written, verbal, digital, on social media, in reviews, or through third parties \u2014 any statement that could reasonably be interpreted as negative, defamatory, misleading, or harmful to the reputation, brand, or commercial standing of The House of Chirag.');
-    para('The Client expressly acknowledges that truth shall not constitute a defense to breach of this provision.');
-    para('Violation of this clause shall entitle the Company to liquidated damages equal to three (3) times the total contract value, plus injunctive relief and full recovery of legal costs.');
-
-    clauseHead('13.  NON-SOLICITATION');
-    para('During the term of this Agreement and for a period of twenty-four (24) months following termination, the Client shall not, directly or indirectly:');
-    bullet([
-      'Solicit, recruit, or engage any employee, contractor, or sub-contractor of the Company',
-      'Attempt to circumvent the Company by directly engaging any vendor, supplier, or platform partner introduced by the Company in the course of services'
-    ]);
-    para('Breach of this clause shall entitle the Company to liquidated damages equal to the greater of (a) six (6) months of the contracted fee, or (b) three (3) times the value of any engagement established in breach.');
-
-    clauseHead('14.  DISPUTE RESOLUTION');
-    para('The parties shall first attempt to resolve any dispute through good faith negotiation within 15 days of written notice of the dispute.');
-    para('If unresolved, any dispute arising from or relating to this Agreement shall be submitted to binding arbitration, administered in ' + city + ', India, under the Arbitration and Conciliation Act, 1996 (as amended). The arbitration shall be conducted by a sole arbitrator mutually agreed upon by the parties, or appointed in accordance with the Act.');
-    para('The Client expressly waives any right to trial by jury and agrees not to participate in any class action, representative action, or collective proceeding against the Company.');
-    para('If the Company prevails in any dispute, the Client shall be responsible for all legal fees, arbitration costs, and enforcement expenses. The Company\u2019s right to seek injunctive relief in any court of competent jurisdiction is preserved.');
-
-    clauseHead('15.  TERMINATION');
-    para('The Company may terminate this Agreement at its sole discretion with or without cause, upon 7 days written notice to the Client.');
-    para('The Client may request termination in writing. Termination by the Client does not entitle the Client to any refund of fees paid.');
-    para('Upon termination: (a) all outstanding amounts become immediately due and payable; (b) the Client\u2019s licence to use deliverables terminates immediately upon any payment default; and (c) each party shall return or destroy the other\u2019s Confidential Information within 30 days.');
-    para('The following provisions survive termination indefinitely: payment obligations, intellectual property rights, confidentiality, limitation of liability, indemnification, non-disparagement, non-solicitation, and dispute resolution.');
-
-    clauseHead('16.  REPRESENTATIONS AND WARRANTIES');
-    para('Each party represents and warrants to the other that:');
-    bullet([
-      'It has full legal authority and capacity to enter into this Agreement',
-      'This Agreement has been duly authorized by all necessary actions',
-      'Execution and performance do not violate any applicable law, regulation, or third-party agreement',
-      'It is not a party to any litigation, arbitration, or regulatory action that would materially affect its ability to perform under this Agreement'
-    ]);
-    para('The Client additionally represents and warrants that:');
-    bullet([
-      'It owns or has the rights to all materials, data, and intellectual property it provides to the Company',
-      'Its business operations are conducted in compliance with all applicable laws',
-      'It has obtained all necessary licences and regulatory approvals to conduct its business'
-    ]);
-
-    clauseHead('17.  AUDIT RIGHTS');
-    para('In the event of a payment dispute or allegations of material breach, the Company reserves the right to request reasonable documentation from the Client to substantiate the Client\u2019s claims, at the Client\u2019s expense.');
-    para('The Client grants the Company the right to audit the use of any deliverables, systems, or licensed materials to ensure compliance with this Agreement. Any such audit shall be conducted with reasonable prior notice and at a mutually convenient time.');
-
-    clauseHead('18.  SEVERABILITY AND ENTIRE AGREEMENT');
-    para('If any provision of this Agreement is held to be invalid, illegal, or unenforceable by a court or arbitrator of competent jurisdiction, the remaining provisions shall continue in full force and effect. The invalid provision shall be modified to the minimum extent necessary to make it enforceable.');
-    para('This Agreement, together with the attached Deliverables Document, constitutes the entire agreement between the parties and supersedes all prior discussions, communications, representations, negotiations, or understandings \u2014 whether oral or written.');
-    para('No amendment shall be valid unless made in writing and executed by an authorized representative of the Company. No waiver of any breach shall constitute a waiver of any subsequent breach.');
-
-    clauseHead('19.  NOTICES');
-    para('All notices under this Agreement shall be in writing and delivered via: (a) registered post to the party\u2019s last known address; (b) email to the party\u2019s designated address with read receipt or acknowledgment; or (c) hand delivery with signed acknowledgment. Notices are effective upon confirmed receipt.');
-
-    clauseHead('20.  GOVERNING LAW');
-    para('This Agreement shall be governed by and construed in accordance with the laws of India. The courts of ' + city + ', India, shall have non-exclusive jurisdiction for any matters not subject to arbitration.');
-
-    sectionDiv('EXECUTION');
-    para('By signing below, the parties acknowledge that they have read, understood, and agree to be bound by all terms of this Master Services Agreement and the attached Deliverables Document.');
-
-    // Signature boxes
-    cp(50);
-    const half = (CW / 2) - 3;
-    // Client box
-    doc.setFillColor(...BG_WARM);
-    doc.setDrawColor(...[200,195,188]);
-    doc.setLineWidth(0.3);
-    doc.rect(ML, y, half, 44, 'FD');
-    sf(7, 'bold', INK_MUTED);
-    doc.setCharSpace(2);
-    doc.text('CLIENT LEGAL NAME', ML + 4, y + 6);
-    doc.setCharSpace(0);
-    sf(9.5, 'bold', INK);
-    const clines = doc.splitTextToSize(client, half - 8);
-    clines.slice(0,2).forEach((l,i) => doc.text(l, ML + 4, y + 12 + i*4.5));
-    doc.setDrawColor(...[190,185,178]);
-    doc.setLineWidth(0.2);
-    doc.line(ML + 4, y + 26, ML + half - 4, y + 26);
-    sf(7, 'normal', INK_MUTED);
-    doc.text('SIGNATURE', ML + 4, y + 30);
-    doc.line(ML + 4, y + 37, ML + half - 4, y + 37);
-    doc.text('DATE', ML + 4, y + 41);
-
-    // HOC box
-    const rx = ML + half + 6;
-    doc.setFillColor(...BG_DARK);
-    doc.rect(rx, y, half, 44, 'F');
-    sf(7, 'bold', [158,149,137]);
-    doc.setCharSpace(1.5);
-    doc.text('FOR: THE HOUSE OF CHIRAG', rx + 4, y + 6);
-    doc.setCharSpace(0);
-    sf(9.5, 'bold', [245,239,230]);
-    const rlines = doc.splitTextToSize(rep, half - 8);
-    rlines.slice(0,2).forEach((l,i) => doc.text(l, rx + 4, y + 12 + i*4.5));
-    doc.setDrawColor(70, 65, 58);
-    doc.setLineWidth(0.2);
-    doc.line(rx + 4, y + 26, rx + half - 4, y + 26);
-    sf(7, 'normal', [120,112,100]);
-    doc.text('AUTHORIZED SIGNATORY', rx + 4, y + 30);
-    doc.line(rx + 4, y + 37, rx + half - 4, y + 37);
-    doc.text('DATE', rx + 4, y + 41);
-    y += 48;
-
-    cp(14);
-    para('This Agreement may be executed in counterparts, each of which shall be deemed an original. Electronic signatures shall be deemed valid and binding.');
-    cp(10);
-    doc.setDrawColor(...[200,195,188]);
-    doc.setLineWidth(0.2);
-    doc.line(ML, y, ML+CW, y);
-    y += 4;
-    sf(7, 'italic', INK_MUTED);
-    doc.text('CONFIDENTIAL DOCUMENT \u2014 FOR AUTHORIZED PARTIES ONLY', PW/2, y, { align: 'center' });
-
-    doc.save('HOC_MSA_' + safe.replace(/ /g,'_') + '.pdf');
-  } catch(err) {
-    console.error('MSA PDF error:', err);
-    alert('PDF generation failed: ' + err.message);
+    if(btn){ btn.textContent = '\u2b07 Download as PDF'; btn.disabled = false; }
   }
 
-  if(btn){ btn.textContent = '\u2b07 Download as PDF'; btn.disabled = false; }
+  // Load logo image as base64, then build PDF
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function(){
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || 400;
+    canvas.height = img.naturalHeight || 400;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const b64 = canvas.toDataURL('image/png');
+    buildMsaPdf(b64);
+  };
+  img.onerror = function(){
+    // If image can't load (CORS), build PDF without watermark
+    buildMsaPdf(null);
+  };
+  img.src = logoUrl + '?t=' + Date.now();
 }
 
 
