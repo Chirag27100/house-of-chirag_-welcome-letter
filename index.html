@@ -26,23 +26,20 @@
     .screen{display:none;min-height:100vh}
     .screen.active{display:flex;flex-direction:column}
 
-    /* Watermark */
+    /* Watermark — inside dashboard only */
     .watermark{
-      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
       width:520px;height:520px;pointer-events:none;z-index:0;opacity:0.12;
     }
     .watermark img{
       width:100%;height:100%;object-fit:contain;
     }
-    .wm-letter{
-      position:fixed;top:50%;left:calc(50% + 146px);transform:translate(-50%,-50%);
-      width:300px;height:300px;pointer-events:none;z-index:0;opacity:0.10;
-    }
+    /* MSA page watermark — absolutely centred inside the white sheet */
     .msa-watermark{
       position:absolute;
       top:50%;left:50%;
       transform:translate(-50%,-50%);
-      width:280px;height:280px;
+      width:260px;height:260px;
       pointer-events:none;
       z-index:0;
       opacity:0.07;
@@ -50,7 +47,15 @@
     .msa-watermark img{
       width:100%;height:100%;object-fit:contain;display:block;
     }
-    /* All direct children of letter-page sit above watermark */
+    /* Welcome mail watermark — centred in preview pane */
+    .wm-letter{
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:300px;height:300px;
+      pointer-events:none;z-index:0;opacity:0.10;
+    }
+    .wm-letter img{ width:100%;height:100%;object-fit:contain; }
+    /* All siblings of watermark sit above it */
     .letter-page > *:not(.msa-watermark){
       position:relative;
       z-index:1;
@@ -158,7 +163,8 @@
     .dash-footer span{font-size:9.5px;color:var(--ink-muted);letter-spacing:1px}
 
     /* ── WELCOME MAIL MODULE ── */
-    #welcome-mail{flex-direction:row;background:var(--bg)}
+    #welcome-mail{flex-direction:row;background:var(--bg);position:relative}
+    #client-agreement{flex-direction:row;background:var(--bg);position:relative}
     .wm-sidebar{
       width:292px;min-height:100vh;
       background:var(--card);
@@ -219,8 +225,8 @@
       position:relative;overflow:visible;
     }
     #msa-page{
-      padding:40px 64px;
-      overflow:hidden;
+      padding:48px 64px;
+      max-width:780px;
     }
     .letter-page::before{
       content:"";position:absolute;top:0;left:0;width:2px;height:100%;
@@ -290,13 +296,11 @@
 </head>
 <body>
 
-<!-- Watermark reprinted SVG -->
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="dashboard" class="screen active">
 <div class="watermark" aria-hidden="true">
   <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="" draggable="false"/>
 </div>
-
-<!-- ══════════════ DASHBOARD ══════════════ -->
-<div id="dashboard" class="screen active">
 
   <!-- Hero — no topbar, just a warm intro about the dashboard -->
   <div class="dash-hero">
@@ -486,21 +490,21 @@
   <div class="wm-preview">
     <div class="letter-page" id="msa-page">
 
-      <!-- Centred watermark inside the page -->
+      <!-- Centred watermark inside the white page — position:absolute, z-index:0 -->
       <div class="msa-watermark" aria-hidden="true">
         <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="" draggable="false"/>
       </div>
 
-      <div class="team-note">⚠️ <strong>TEAM:</strong> Fill Client Legal Name, Date, Arbitration City &amp; HOC Signatory in the sidebar. This notice won't appear in exports.</div>
-
       <!-- MSA Header -->
       <div style="text-align:center;margin-bottom:10px">
-        <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="HOC" style="width:72px;height:72px;object-fit:contain;opacity:1;display:inline-block"/>
+        <img src="https://pdbhvohvjboopbgwbkqu.supabase.co/storage/v1/object/public/Sakhii%20IVF/HOC%20transparent.png" alt="HOC" style="width:64px;height:64px;object-fit:contain;opacity:0.9;display:inline-block"/>
       </div>
       <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);letter-spacing:3px;text-transform:uppercase">THE HOUSE OF CHIRAG</div>
       <div style="text-align:center;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:1px;margin-top:6px">MASTER SERVICES AGREEMENT</div>
       <div style="text-align:center;font-size:10px;color:var(--ink-soft);letter-spacing:2px;margin-top:4px;font-style:italic">Revenue Systems &nbsp;•&nbsp; Growth Architecture &nbsp;•&nbsp; Marketing Infrastructure</div>
       <div class="l-divider" style="margin:16px 0"></div>
+
+      <div class="team-note">⚠️ <strong>TEAM:</strong> Fill Client Legal Name, Date, Arbitration City &amp; HOC Signatory in the sidebar. This notice won't appear in exports.</div>
 
       <p class="l-body">This Master Services Agreement (the "Agreement") is entered into as of the date last signed below (the "Effective Date") by and between:</p>
       <p class="l-body"><strong>The House of Chirag</strong> ("Company") — a professional services firm providing revenue systems architecture, strategic advisory, marketing infrastructure development, automation deployment, and associated execution services, and</p>
